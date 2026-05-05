@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/notification-bell";
 import { auth, signOut } from "@/lib/auth";
 
 export default async function AppLayout({
@@ -17,6 +18,7 @@ export default async function AppLayout({
             Trayekin
           </Link>
           <div className="flex items-center gap-2">
+            <NotificationBell />
             <span className="text-sm text-zinc-500">
               {session?.user?.name || session?.user?.email}
             </span>
