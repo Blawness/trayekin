@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/notification-bell";
+import { PushSubscribe } from "@/components/push-subscribe";
 import { auth, signOut } from "@/lib/auth";
 
 export default async function AppLayout({
@@ -51,6 +52,7 @@ export default async function AppLayout({
           </Link>
         </div>
       </nav>
+      <PushSubscribe />
     </div>
   );
 }
