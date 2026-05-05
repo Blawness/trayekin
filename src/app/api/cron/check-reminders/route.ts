@@ -8,7 +8,7 @@ import {
   pushSubscriptions,
 } from "@/lib/db/schema";
 import { eq, sql, inArray } from "drizzle-orm";
-import { webpush } from "@/lib/push";
+import { webpush, ensureVapid } from "@/lib/push";
 
 const REMINDER_DAYS = [30, 14, 7, 3, 1];
 
@@ -120,6 +120,7 @@ export async function GET(request: Request) {
       .from(pushSubscriptions)
       .where(inArray(pushSubscriptions.userId, userIds));
 
+    ensureVapid();
     for (const sub of subs) {
       try {
         await webpush.sendNotification(

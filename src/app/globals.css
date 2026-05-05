@@ -126,5 +126,10 @@
   }
   html {
     @apply font-sans;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  input, select, textarea, button {
+    font-size: 16px;
   }
 }
