@@ -4,6 +4,7 @@ import {
   text,
   timestamp,
   date,
+  integer,
   pgEnum,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
@@ -17,6 +18,14 @@ export const serviceTypeEnum = pgEnum("service_type", [
 export const notificationTypeEnum = pgEnum("notification_type", [
   "kir",
   "service",
+  "stnk",
+  "part",
+]);
+
+export const stnkTypeEnum = pgEnum("stnk_type", [
+  "tahunan",
+  "lima_tahunan",
+  "asuransi",
 ]);
 
 export const users = pgTable("users", {
@@ -61,6 +70,45 @@ export const serviceRecords = pgTable("service_records", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const stnkRecords = pgTable("stnk_records", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  vehicleId: uuid("vehicle_id")
+    .notNull()
+    .references(() => vehicles.id, { onDelete: "cascade" }),
+  type: stnkTypeEnum("type").notNull().default("tahunan"),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const dailyLedger = pgTable("daily_ledger", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  vehicleId: uuid("vehicle_id")
+    .notNull()
+    .references(() => vehicles.id, { onDelete: "cascade" }),
+  date: date("date").notNull(),
+  revenue: integer("revenue").notNull().default(0),
+  expenses: integer("expenses").notNull().default(0),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const partReplacements = pgTable("part_replacements", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  vehicleId: uuid("vehicle_id")
+    .notNull()
+    .references(() => vehicles.id, { onDelete: "cascade" }),
+  partName: text("part_name").notNull(),
+  cost: integer("cost").notNull().default(0),
+  date: date("date").notNull(),
+  odometer: integer("odometer"),
+  lifespanMonths: integer("lifespan_months"),
+  nextReplaceDate: date("next_replace_date"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const pushSubscriptions = pgTable("push_subscriptions", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id")
@@ -98,6 +146,9 @@ export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
   user: one(users, { fields: [vehicles.userId], references: [users.id] }),
   kirRecords: many(kirRecords),
   serviceRecords: many(serviceRecords),
+  stnkRecords: many(stnkRecords),
+  dailyLedger: many(dailyLedger),
+  partReplacements: many(partReplacements),
   notifications: many(notifications),
 }));
 
@@ -111,6 +162,27 @@ export const kirRecordsRelations = relations(kirRecords, ({ one }) => ({
 export const serviceRecordsRelations = relations(serviceRecords, ({ one }) => ({
   vehicle: one(vehicles, {
     fields: [serviceRecords.vehicleId],
+    references: [vehicles.id],
+  }),
+}));
+
+export const stnkRecordsRelations = relations(stnkRecords, ({ one }) => ({
+  vehicle: one(vehicles, {
+    fields: [stnkRecords.vehicleId],
+    references: [vehicles.id],
+  }),
+}));
+
+export const dailyLedgerRelations = relations(dailyLedger, ({ one }) => ({
+  vehicle: one(vehicles, {
+    fields: [dailyLedger.vehicleId],
+    references: [vehicles.id],
+  }),
+}));
+
+export const partReplacementsRelations = relations(partReplacements, ({ one }) => ({
+  vehicle: one(vehicles, {
+    fields: [partReplacements.vehicleId],
     references: [vehicles.id],
   }),
 }));

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, Truck } from "lucide-react";
+import { House, Truck, BarChart3 } from "lucide-react";
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -29,6 +29,17 @@ export function BottomNav() {
         >
           <Truck className="h-5 w-5" />
           <span>Kendaraan</span>
+        </Link>
+        <Link
+          href="/reports"
+          className={`flex flex-col items-center text-xs gap-1 transition-colors ${
+            pathname.startsWith("/reports")
+              ? "text-primary"
+              : "text-muted-foreground"
+          }`}
+        >
+          <BarChart3 className="h-5 w-5" />
+          <span>Laporan</span>
         </Link>
       </div>
     </nav>

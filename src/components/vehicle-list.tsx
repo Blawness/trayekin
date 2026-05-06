@@ -84,12 +84,12 @@ export function VehicleList({
         <div className="space-y-3">
           {filtered.map((v) => {
             const latestKir = v.kirRecords[0];
-            const latestService = v.serviceRecords[0];
+            const latestStnk = v.stnkRecords?.[0];
             const kirStatus = latestKir
               ? getStatus(new Date(latestKir.endDate))
               : null;
-            const serviceStatus = latestService
-              ? getStatus(new Date(latestService.nextServiceDate))
+            const stnkStatus = latestStnk
+              ? getStatus(new Date(latestStnk.endDate))
               : null;
 
             return (
@@ -105,7 +105,7 @@ export function VehicleList({
                         {v.name || "Tanpa nama"}
                       </div>
                     </div>
-                    <div className="flex gap-2 shrink-0">
+                    <div className="flex gap-1.5 shrink-0">
                       {kirStatus && (
                         <Badge
                           variant="secondary"
@@ -114,12 +114,12 @@ export function VehicleList({
                           KIR: {getStatusLabel(kirStatus)}
                         </Badge>
                       )}
-                      {serviceStatus && (
+                      {stnkStatus && (
                         <Badge
                           variant="secondary"
-                          className={getStatusColor(serviceStatus)}
+                          className={getStatusColor(stnkStatus)}
                         >
-                          Servis: {getStatusLabel(serviceStatus)}
+                          STNK: {getStatusLabel(stnkStatus)}
                         </Badge>
                       )}
                     </div>

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { notifications } from "@/lib/db/schema";
+import { notifications, vehicles } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { eq, desc, sql, inArray, and, isNull } from "drizzle-orm";
 
@@ -10,14 +10,30 @@ export async function getNotifications() {
   const session = await auth();
   if (!session?.user) return [];
 
-  return db.query.notifications.findMany({
-    where: eq(notifications.userId, session.user.id!),
-    orderBy: desc(notifications.createdAt),
-    limit: 20,
-    with: {
-      vehicle: true,
-    },
-  });
+  const notificationList = await db
+    .select()
+    .from(notifications)
+    .where(eq(notifications.userId, session.user.id!))
+    .orderBy(desc(notifications.createdAt))
+    .limit(20);
+
+  if (notificationList.length === 0) return [];
+
+  const vehicleIds = [
+    ...new Set(notificationList.map((n) => n.vehicleId)),
+  ];
+
+  const vehicleList = await db
+    .select()
+    .from(vehicles)
+    .where(inArray(vehicles.id, vehicleIds));
+
+  const vehicleMap = new Map(vehicleList.map((v) => [v.id, v]));
+
+  return notificationList.map((n) => ({
+    ...n,
+    vehicle: vehicleMap.get(n.vehicleId) ?? null,
+  }));
 }
 
 export async function getUnreadCount() {

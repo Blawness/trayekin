@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getStatus, getStatusLabel, getStatusColor, formatDate } from "@/lib/utils/status";
+import { getStatus, getStatusLabel, getStatusColor } from "@/lib/utils/status";
 import { Plus, Truck, RefreshCw } from "lucide-react";
 import type { getVehicles } from "@/lib/actions/vehicles";
 
@@ -17,21 +17,25 @@ export function DashboardContent({ vehicles }: { vehicles: Vehicle[] }) {
   const total = vehicles.length;
   let kirMendekati = 0;
   let serviceTerlambat = 0;
+  let stnkMendekati = 0;
 
   vehicles.forEach((v) => {
     const latestKir = v.kirRecords[0];
     const latestService = v.serviceRecords[0];
+    const latestStnk = v.stnkRecords?.[0];
     const kirStatus = latestKir ? getStatus(new Date(latestKir.endDate)) : null;
     const serviceStatus = latestService
       ? getStatus(new Date(latestService.nextServiceDate))
       : null;
+    const stnkStatus = latestStnk ? getStatus(new Date(latestStnk.endDate)) : null;
     if (kirStatus === "mendekati" || kirStatus === "terlambat") kirMendekati++;
     if (serviceStatus === "terlambat") serviceTerlambat++;
+    if (stnkStatus === "mendekati" || stnkStatus === "terlambat") stnkMendekati++;
   });
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Card className="border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
           <CardContent className="p-3">
             <div className="text-xs text-muted-foreground">Total</div>
@@ -51,6 +55,17 @@ export function DashboardContent({ vehicles }: { vehicles: Vehicle[] }) {
             <div className="text-xs text-muted-foreground">Servis Telat</div>
             <div className="text-2xl font-bold text-red-600">
               {serviceTerlambat}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
+          <CardContent className="p-3">
+            <div className="text-xs text-muted-foreground">STNK</div>
+            <div className="text-2xl font-bold text-green-600">
+              {stnkMendekati}
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-0.5">
+              {stnkMendekati > 0 ? "Perlu perhatian" : "Aman"}
             </div>
           </CardContent>
         </Card>
@@ -85,12 +100,12 @@ export function DashboardContent({ vehicles }: { vehicles: Vehicle[] }) {
           <div className="space-y-3">
             {vehicles.map((v) => {
               const latestKir = v.kirRecords[0];
-              const latestService = v.serviceRecords[0];
+              const latestStnk = v.stnkRecords?.[0];
               const kirStatus = latestKir
                 ? getStatus(new Date(latestKir.endDate))
                 : null;
-              const serviceStatus = latestService
-                ? getStatus(new Date(latestService.nextServiceDate))
+              const stnkStatus = latestStnk
+                ? getStatus(new Date(latestStnk.endDate))
                 : null;
 
               return (
@@ -106,7 +121,7 @@ export function DashboardContent({ vehicles }: { vehicles: Vehicle[] }) {
                           {v.name || "Tanpa nama"}
                         </div>
                       </div>
-                      <div className="flex gap-2 text-right shrink-0">
+                      <div className="flex gap-1.5 text-right shrink-0">
                         <div>
                           <div className="text-[10px] text-muted-foreground">
                             KIR
@@ -119,38 +134,20 @@ export function DashboardContent({ vehicles }: { vehicles: Vehicle[] }) {
                               {getStatusLabel(kirStatus)}
                             </Badge>
                           ) : (
-                            <span className="text-xs text-muted-foreground">
-                              -
-                            </span>
-                          )}
-                          {latestKir && (
-                            <div className="text-[10px] text-muted-foreground mt-0.5">
-                              {formatDate(new Date(latestKir.endDate))}
-                            </div>
+                            <span className="text-xs text-muted-foreground">-</span>
                           )}
                         </div>
                         <div>
-                          <div className="text-[10px] text-muted-foreground">
-                            Servis
-                          </div>
-                          {serviceStatus ? (
+                          <div className="text-[10px] text-muted-foreground">STNK</div>
+                          {stnkStatus ? (
                             <Badge
                               variant="secondary"
-                              className={getStatusColor(serviceStatus)}
+                              className={getStatusColor(stnkStatus)}
                             >
-                              {getStatusLabel(serviceStatus)}
+                              {getStatusLabel(stnkStatus)}
                             </Badge>
                           ) : (
-                            <span className="text-xs text-muted-foreground">
-                              -
-                            </span>
-                          )}
-                          {latestService && (
-                            <div className="text-[10px] text-muted-foreground mt-0.5">
-                              {formatDate(
-                                new Date(latestService.nextServiceDate)
-                              )}
-                            </div>
+                            <span className="text-xs text-muted-foreground">-</span>
                           )}
                         </div>
                       </div>

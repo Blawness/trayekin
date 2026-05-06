@@ -4,10 +4,12 @@ import {
   notifications,
   kirRecords,
   serviceRecords,
+  stnkRecords,
+  partReplacements,
   vehicles,
   pushSubscriptions,
 } from "@/lib/db/schema";
-import { eq, sql, inArray } from "drizzle-orm";
+import { eq, sql, inArray, isNotNull } from "drizzle-orm";
 import { webpush, ensureVapid } from "@/lib/push";
 
 const REMINDER_DAYS = [30, 14, 7, 3, 1];
@@ -21,88 +23,124 @@ function isReminderDay(dueDate: Date): boolean {
   return REMINDER_DAYS.includes(diffDays);
 }
 
+function fmt(date: Date) {
+  return date.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function dedupeLatest<T extends { vehicles: typeof vehicles.$inferSelect }>(
+  rows: T[]
+): T[] {
+  const seen = new Set<string>();
+  return rows.filter((row) => {
+    const vid = row.vehicles.id;
+    if (seen.has(vid)) return false;
+    seen.add(vid);
+    return true;
+  });
+}
+
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Check KIR records
+  // KIR reminders
   const allKir = await db
-    .select({
-      kir: kirRecords,
-      vehicle: vehicles,
-    })
+    .select()
     .from(kirRecords)
     .innerJoin(vehicles, eq(kirRecords.vehicleId, vehicles.id))
     .orderBy(sql`${kirRecords.vehicleId}, ${kirRecords.startDate} DESC`);
 
-  // Deduplicate: only latest per vehicle
-  const seenVehiclesKir = new Set<string>();
-  const latestKirPerVehicle = allKir.filter((row) => {
-    const vid = row.vehicle.id;
-    if (seenVehiclesKir.has(vid)) return false;
-    seenVehiclesKir.add(vid);
-    return true;
-  });
-
-  for (const record of latestKirPerVehicle) {
-    if (isReminderDay(new Date(record.kir.endDate))) {
-      const formatted = new Date(record.kir.endDate).toLocaleDateString(
-        "id-ID",
-        { day: "numeric", month: "long", year: "numeric" }
-      );
-
+  for (const row of dedupeLatest(allKir)) {
+    const r = row.kir_records;
+    const v = row.vehicles;
+    if (isReminderDay(new Date(r.endDate))) {
       await db.insert(notifications).values({
-        userId: record.vehicle.userId,
-        vehicleId: record.vehicle.id,
+        userId: v.userId,
+        vehicleId: v.id,
         type: "kir",
-        message: `KIR kendaraan ${record.vehicle.plate} akan kadaluarsa pada ${formatted}. Segera perpanjang!`,
-        dueDate: record.kir.endDate,
+        message: `KIR kendaraan ${v.plate} akan kadaluarsa pada ${fmt(new Date(r.endDate))}. Segera perpanjang!`,
+        dueDate: r.endDate,
       });
     }
   }
 
-  // Check service records
+  // Service reminders
   const allService = await db
-    .select({
-      sr: serviceRecords,
-      vehicle: vehicles,
-    })
+    .select()
     .from(serviceRecords)
     .innerJoin(vehicles, eq(serviceRecords.vehicleId, vehicles.id))
     .orderBy(sql`${serviceRecords.vehicleId}, ${serviceRecords.serviceDate} DESC`);
 
-  // Deduplicate: only latest per vehicle
-  const seenVehiclesService = new Set<string>();
-  const latestServicePerVehicle = allService.filter((row) => {
-    const vid = row.vehicle.id;
-    if (seenVehiclesService.has(vid)) return false;
-    seenVehiclesService.add(vid);
-    return true;
-  });
-
-  for (const record of latestServicePerVehicle) {
-    if (isReminderDay(new Date(record.sr.nextServiceDate))) {
-      const formatted = new Date(
-        record.sr.nextServiceDate
-      ).toLocaleDateString("id-ID", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
-
+  for (const row of dedupeLatest(allService)) {
+    const r = row.service_records;
+    const v = row.vehicles;
+    if (isReminderDay(new Date(r.nextServiceDate))) {
+      const formatted = fmt(new Date(r.nextServiceDate));
       await db.insert(notifications).values({
-        userId: record.vehicle.userId,
-        vehicleId: record.vehicle.id,
+        userId: v.userId,
+        vehicleId: v.id,
         type: "service",
-        message: `Servis kendaraan ${record.vehicle.plate} dijadwalkan pada ${formatted}. Jangan sampai terlewat!`,
-        dueDate: record.sr.nextServiceDate,
+        message: `Servis kendaraan ${v.plate} dijadwalkan pada ${formatted}. Jangan sampai terlewat!`,
+        dueDate: r.nextServiceDate,
       });
     }
   }
 
-  // Send push to all users who got notifications today
+  // STNK reminders
+  const allStnk = await db
+    .select()
+    .from(stnkRecords)
+    .innerJoin(vehicles, eq(stnkRecords.vehicleId, vehicles.id))
+    .orderBy(sql`${stnkRecords.vehicleId}, ${stnkRecords.startDate} DESC`);
+
+  for (const row of dedupeLatest(allStnk)) {
+    const r = row.stnk_records;
+    const v = row.vehicles;
+    if (isReminderDay(new Date(r.endDate))) {
+      await db.insert(notifications).values({
+        userId: v.userId,
+        vehicleId: v.id,
+        type: "stnk",
+        message: `STNK kendaraan ${v.plate} akan kadaluarsa pada ${fmt(new Date(r.endDate))}. Segera perpanjang!`,
+        dueDate: r.endDate,
+      });
+    }
+  }
+
+  // Parts reminders — latest per part name per vehicle
+  const allParts = await db
+    .select()
+    .from(partReplacements)
+    .innerJoin(vehicles, eq(partReplacements.vehicleId, vehicles.id))
+    .where(isNotNull(partReplacements.nextReplaceDate))
+    .orderBy(sql`${partReplacements.vehicleId}, ${partReplacements.partName}, ${partReplacements.date} DESC`);
+
+  const partsKey = new Map<string, typeof allParts[number]>();
+  for (const row of allParts) {
+    const key = `${row.vehicles.id}:${row.part_replacements.partName}`;
+    if (!partsKey.has(key)) partsKey.set(key, row);
+  }
+  for (const row of partsKey.values()) {
+    const r = row.part_replacements;
+    const v = row.vehicles;
+    if (r.nextReplaceDate && isReminderDay(new Date(r.nextReplaceDate))) {
+      await db.insert(notifications).values({
+        userId: v.userId,
+        vehicleId: v.id,
+        type: "part",
+        message: `${r.partName} kendaraan ${v.plate} perlu diganti sekitar ${fmt(new Date(r.nextReplaceDate))}.`,
+        dueDate: r.nextReplaceDate,
+      });
+    }
+  }
+
+  // Push notifications
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -130,7 +168,7 @@ export async function GET(request: Request) {
           },
           JSON.stringify({
             title: "Trayekin — Pengingat",
-            body: "Ada KIR atau servis yang perlu perhatian Anda.",
+            body: "Ada KIR, servis, STNK, atau suku cadang yang perlu perhatian Anda.",
             url: "/",
           })
         );
