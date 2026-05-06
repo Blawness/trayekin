@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { signIn } from "@/lib/auth";
 
 export async function register(formData: FormData) {

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/notification-bell";
 import { PushSubscribe } from "@/components/push-subscribe";
 import { auth, signOut } from "@/lib/auth";
+import { House, Truck } from "lucide-react";
 
 export default async function AppLayout({
   children,
@@ -40,14 +41,14 @@ export default async function AppLayout({
       <nav className="fixed bottom-0 left-0 right-0 border-t bg-white z-50">
         <div className="mx-auto flex max-w-2xl justify-around py-2">
           <Link href="/" className="flex flex-col items-center text-xs gap-1">
-            <span className="text-lg">🏠</span>
+            <House className="h-5 w-5" />
             <span>Dashboard</span>
           </Link>
           <Link
             href="/vehicles"
             className="flex flex-col items-center text-xs gap-1"
           >
-            <span className="text-lg">🚐</span>
+            <Truck className="h-5 w-5" />
             <span>Kendaraan</span>
           </Link>
         </div>

@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Truck } from "lucide-react";
 
 export default async function VehiclesPage() {
   const vehicleList = await getVehicles();
@@ -22,7 +22,7 @@ export default async function VehiclesPage() {
 
       {vehicleList.length === 0 ? (
         <div className="text-center py-12 text-zinc-400">
-          <p className="text-4xl mb-2">🚐</p>
+          <Truck className="h-10 w-10 mx-auto mb-2 text-zinc-300" />
           <p>Belum ada kendaraan.</p>
         </div>
       ) : (
@@ -41,7 +41,9 @@ export default async function VehiclesPage() {
               <Link key={v.id} href={`/vehicles/${v.id}`}>
                 <Card className="hover:shadow-md transition-shadow">
                   <CardContent className="p-4 flex items-center gap-3">
-                    <div className="text-2xl">🚐</div>
+                    <div className="text-muted-foreground">
+                      <Truck className="h-7 w-7" />
+                    </div>
                     <div className="flex-1">
                       <div className="font-semibold">{v.plate}</div>
                       <div className="text-sm text-zinc-500">
