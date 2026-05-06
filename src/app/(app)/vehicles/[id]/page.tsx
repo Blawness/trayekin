@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RefreshButton } from "@/components/refresh-button";
 import { notFound } from "next/navigation";
 
 async function addKirRecord(formData: FormData) {
@@ -40,11 +41,16 @@ export default async function VehicleDetailPage({
 
   return (
     <div className="space-y-6">
-      <Card>
+      <div className="flex items-center justify-between">
+        <h1 className="sr-only">Detail Kendaraan</h1>
+        <RefreshButton />
+      </div>
+
+      <Card className="hover:shadow-md transition-shadow">
         <CardHeader>
           <CardTitle className="text-2xl">{vehicle.plate}</CardTitle>
           {vehicle.name && (
-            <p className="text-zinc-500">{vehicle.name}</p>
+            <p className="text-muted-foreground">{vehicle.name}</p>
           )}
         </CardHeader>
         <CardContent className="flex gap-3">
@@ -64,7 +70,7 @@ export default async function VehicleDetailPage({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="hover:shadow-md transition-shadow">
         <CardHeader>
           <CardTitle className="text-base">Catat KIR Baru</CardTitle>
         </CardHeader>
@@ -82,7 +88,7 @@ export default async function VehicleDetailPage({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="hover:shadow-md transition-shadow">
         <CardHeader>
           <CardTitle className="text-base">Catat Servis Baru</CardTitle>
         </CardHeader>
@@ -103,7 +109,7 @@ export default async function VehicleDetailPage({
               <select
                 id="type"
                 name="type"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <option value="rutin">Rutin</option>
                 <option value="besar">Besar</option>
@@ -122,7 +128,7 @@ export default async function VehicleDetailPage({
       </Card>
 
       {vehicle.kirRecords.length > 0 && (
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="text-base">Riwayat KIR</CardTitle>
           </CardHeader>
@@ -150,7 +156,7 @@ export default async function VehicleDetailPage({
       )}
 
       {vehicle.serviceRecords.length > 0 && (
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="text-base">Riwayat Servis</CardTitle>
           </CardHeader>
@@ -163,11 +169,11 @@ export default async function VehicleDetailPage({
                 >
                   <div>
                     <div>{formatDate(new Date(r.serviceDate))}</div>
-                    <div className="text-xs text-zinc-400">
+                    <div className="text-xs text-muted-foreground">
                       {r.type} {r.notes && `— ${r.notes}`}
                     </div>
                   </div>
-                  <div className="text-xs text-zinc-400">
+                  <div className="text-xs text-muted-foreground">
                     Berikutnya: {formatDate(new Date(r.nextServiceDate))}
                   </div>
                 </div>

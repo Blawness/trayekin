@@ -10,6 +10,7 @@ export function PushSubscribe() {
   useEffect(() => {
     if ("Notification" in window && "serviceWorker" in navigator) {
       if (Notification.permission === "default") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setShow(true);
       }
     }
@@ -48,7 +49,7 @@ export function PushSubscribe() {
 
   return (
     <div className="fixed bottom-28 left-4 right-4 z-50 mx-auto max-w-md">
-      <div className="bg-blue-600 text-white rounded-lg p-4 shadow-lg flex items-center gap-3">
+      <div className="bg-primary text-primary-foreground rounded-lg p-4 shadow-lg flex items-center gap-3">
         <p className="text-sm flex-1">
           Izinkan notifikasi agar tidak terlewat pengingat KIR dan servis.
         </p>

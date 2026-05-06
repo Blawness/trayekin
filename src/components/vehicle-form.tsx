@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/components/toast";
 
 export function VehicleForm({
   action,
@@ -15,6 +16,7 @@ export function VehicleForm({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
@@ -23,7 +25,9 @@ export function VehicleForm({
     if (result?.error) {
       setError(result.error);
       setLoading(false);
+      toast(result.error, "error");
     } else {
+      toast("Kendaraan berhasil disimpan.", "success");
       router.push("/");
       router.refresh();
     }

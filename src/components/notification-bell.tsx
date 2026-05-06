@@ -18,6 +18,7 @@ export function NotificationBell() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchCount();
     const interval = setInterval(fetchCount, 60000);
     return () => clearInterval(interval);
@@ -51,7 +52,7 @@ export function NotificationBell() {
         )}
       </Button>
       {open && (
-        <div className="absolute right-0 top-10 w-80 bg-white border rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+        <div className="absolute right-0 top-10 w-80 bg-popover border rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
           <div className="p-3 border-b flex justify-between items-center">
             <span className="font-semibold text-sm">Notifikasi</span>
             {count > 0 && (
@@ -61,17 +62,17 @@ export function NotificationBell() {
             )}
           </div>
           {items.length === 0 ? (
-            <div className="p-4 text-center text-sm text-zinc-400">
+            <div className="p-4 text-center text-sm text-muted-foreground">
               Belum ada notifikasi.
             </div>
           ) : (
             items.map((n) => (
               <div
                 key={n.id}
-                className={`p-3 border-b text-sm ${!n.isRead ? "bg-blue-50" : ""}`}
+                className={`p-3 border-b text-sm ${!n.isRead ? "bg-blue-50 dark:bg-blue-950" : ""}`}
               >
                 <p>{n.message}</p>
-                <p className="text-xs text-zinc-400 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {n.vehicle?.plate} ·{" "}
                   {new Date(n.createdAt).toLocaleDateString("id-ID")}
                 </p>

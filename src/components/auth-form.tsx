@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { useToast } from "@/components/toast";
 
 type Props = {
   mode: "login" | "register";
@@ -16,6 +19,7 @@ export function AuthForm({ mode, action }: Props) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
@@ -24,6 +28,7 @@ export function AuthForm({ mode, action }: Props) {
     if (result?.error) {
       setError(result.error);
       setLoading(false);
+      toast(result.error, "error");
     } else {
       router.push("/");
       router.refresh();
@@ -66,12 +71,12 @@ export function AuthForm({ mode, action }: Props) {
             {mode === "login" ? (
               <>
                 Belum punya akun?{" "}
-                <a href="/register" className="underline">Daftar</a>
+                <Link href="/register" className="underline">Daftar</Link>
               </>
             ) : (
               <>
                 Sudah punya akun?{" "}
-                <a href="/login" className="underline">Masuk</a>
+                <Link href="/login" className="underline">Masuk</Link>
               </>
             )}
           </p>

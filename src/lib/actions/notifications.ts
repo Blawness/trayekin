@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { notifications } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
-import { eq, desc, sql, inArray, isNull } from "drizzle-orm";
+import { eq, desc, sql, inArray, and, isNull } from "drizzle-orm";
 
 export async function getNotifications() {
   const session = await auth();
@@ -28,8 +28,10 @@ export async function getUnreadCount() {
     .select({ count: sql<number>`count(*)` })
     .from(notifications)
     .where(
-      eq(notifications.userId, session.user.id!),
-      isNull(notifications.isRead),
+      and(
+        eq(notifications.userId, session.user.id!),
+        isNull(notifications.isRead),
+      )
     );
 
   return Number(result?.count ?? 0);
