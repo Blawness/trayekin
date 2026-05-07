@@ -11,6 +11,7 @@ export async function addLedgerEntry(formData: FormData) {
   if (!session?.user) throw new Error("Unauthorized");
 
   const vehicleId = formData.get("vehicleId") as string;
+  const driverId = formData.get("driverId") as string;
   const dateStr = formData.get("date") as string;
   const revenueStr = formData.get("revenue") as string;
   const expensesStr = formData.get("expenses") as string;
@@ -20,6 +21,7 @@ export async function addLedgerEntry(formData: FormData) {
 
   await db.insert(dailyLedger).values({
     vehicleId,
+    driverId: driverId || null,
     date: dateStr,
     revenue: parseInt(revenueStr) || 0,
     expenses: parseInt(expensesStr) || 0,
@@ -28,6 +30,8 @@ export async function addLedgerEntry(formData: FormData) {
 
   revalidatePath("/");
   revalidatePath(`/vehicles/${vehicleId}`);
+  revalidatePath("/reports");
+  revalidatePath("/drivers");
   return { success: true };
 }
 
@@ -39,6 +43,18 @@ export async function getLedgerEntries(vehicleId: string) {
     .select()
     .from(dailyLedger)
     .where(eq(dailyLedger.vehicleId, vehicleId))
+    .orderBy(desc(dailyLedger.date))
+    .limit(90);
+}
+
+export async function getLedgerEntriesByDriver(driverId: string) {
+  const session = await auth();
+  if (!session?.user) return [];
+
+  return db
+    .select()
+    .from(dailyLedger)
+    .where(eq(dailyLedger.driverId, driverId))
     .orderBy(desc(dailyLedger.date))
     .limit(90);
 }
@@ -57,6 +73,27 @@ export async function getLedgerSummary(vehicleId: string, since: Date) {
     .where(
       and(
         eq(dailyLedger.vehicleId, vehicleId),
+        gte(dailyLedger.date, since.toISOString().split("T")[0])
+      )
+    );
+
+  return result;
+}
+
+export async function getDriverLedgerSummary(driverId: string, since: Date) {
+  const session = await auth();
+  if (!session?.user) return null;
+
+  const [result] = await db
+    .select({
+      totalRevenue: sql<number>`coalesce(sum(${dailyLedger.revenue}), 0)`.mapWith(Number),
+      totalExpenses: sql<number>`coalesce(sum(${dailyLedger.expenses}), 0)`.mapWith(Number),
+      count: sql<number>`count(*)`.mapWith(Number),
+    })
+    .from(dailyLedger)
+    .where(
+      and(
+        eq(dailyLedger.driverId, driverId),
         gte(dailyLedger.date, since.toISOString().split("T")[0])
       )
     );

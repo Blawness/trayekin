@@ -4,6 +4,7 @@ import { addServiceRecord as addServiceRecordAction } from "@/lib/actions/servic
 import { addStnkRecord } from "@/lib/actions/stnk";
 import { addLedgerEntry, getLedgerEntries } from "@/lib/actions/ledger";
 import { addPartReplacement, getPartReplacements } from "@/lib/actions/parts";
+import { getDrivers } from "@/lib/actions/drivers";
 import { getStatus, getStatusLabel, getStatusColor, formatDate } from "@/lib/utils/status";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,9 +54,10 @@ export default async function VehicleDetailPage({
   const vehicle = await getVehicle(id);
   if (!vehicle) notFound();
 
-  const [ledgerEntries, partList] = await Promise.all([
+  const [ledgerEntries, partList, driverList] = await Promise.all([
     getLedgerEntries(id),
     getPartReplacements(id),
+    getDrivers(),
   ]);
 
   const latestKir = vehicle.kirRecords[0];
@@ -236,6 +238,19 @@ export default async function VehicleDetailPage({
             <div className="space-y-2">
               <Label htmlFor="ledgerDate">Tanggal</Label>
               <Input id="ledgerDate" name="date" type="date" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="driverId">Sopir</Label>
+              <select
+                id="driverId"
+                name="driverId"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="">-- Pilih sopir --</option>
+                {driverList.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">

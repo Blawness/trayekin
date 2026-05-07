@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, Truck, BarChart3 } from "lucide-react";
+import { House, Truck, Users, BarChart3 } from "lucide-react";
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -17,7 +17,7 @@ export function BottomNav() {
           }`}
         >
           <House className="h-5 w-5" />
-          <span>Dashboard</span>
+          <span>Dasbor</span>
         </Link>
         <Link
           href="/vehicles"
@@ -28,7 +28,18 @@ export function BottomNav() {
           }`}
         >
           <Truck className="h-5 w-5" />
-          <span>Kendaraan</span>
+          <span>Angkot</span>
+        </Link>
+        <Link
+          href="/drivers"
+          className={`flex flex-col items-center text-xs gap-1 transition-colors ${
+            pathname.startsWith("/drivers")
+              ? "text-primary"
+              : "text-muted-foreground"
+          }`}
+        >
+          <Users className="h-5 w-5" />
+          <span>Sopir</span>
         </Link>
         <Link
           href="/reports"

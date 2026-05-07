@@ -47,6 +47,19 @@ export const vehicles = pgTable("vehicles", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const drivers = pgTable("drivers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  phone: text("phone"),
+  simNumber: text("sim_number"),
+  simExpiry: date("sim_expiry"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const kirRecords = pgTable("kir_records", {
   id: uuid("id").primaryKey().defaultRandom(),
   vehicleId: uuid("vehicle_id")
@@ -87,6 +100,7 @@ export const dailyLedger = pgTable("daily_ledger", {
   vehicleId: uuid("vehicle_id")
     .notNull()
     .references(() => vehicles.id, { onDelete: "cascade" }),
+  driverId: uuid("driver_id").references(() => drivers.id, { onDelete: "set null" }),
   date: date("date").notNull(),
   revenue: integer("revenue").notNull().default(0),
   expenses: integer("expenses").notNull().default(0),
@@ -138,6 +152,7 @@ export const notifications = pgTable("notifications", {
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   vehicles: many(vehicles),
+  drivers: many(drivers),
   pushSubscriptions: many(pushSubscriptions),
   notifications: many(notifications),
 }));
@@ -150,6 +165,11 @@ export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
   dailyLedger: many(dailyLedger),
   partReplacements: many(partReplacements),
   notifications: many(notifications),
+}));
+
+export const driversRelations = relations(drivers, ({ one, many }) => ({
+  user: one(users, { fields: [drivers.userId], references: [users.id] }),
+  dailyLedger: many(dailyLedger),
 }));
 
 export const kirRecordsRelations = relations(kirRecords, ({ one }) => ({
@@ -177,6 +197,10 @@ export const dailyLedgerRelations = relations(dailyLedger, ({ one }) => ({
   vehicle: one(vehicles, {
     fields: [dailyLedger.vehicleId],
     references: [vehicles.id],
+  }),
+  driver: one(drivers, {
+    fields: [dailyLedger.driverId],
+    references: [drivers.id],
   }),
 }));
 
