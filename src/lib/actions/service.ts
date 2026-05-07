@@ -6,6 +6,8 @@ import { serviceRecords } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { addMonths } from "@/lib/utils/status";
 
+const SERVICE_MONTHS = 3;
+
 export async function addServiceRecord(formData: FormData) {
   const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
@@ -20,17 +22,21 @@ export async function addServiceRecord(formData: FormData) {
   }
 
   const serviceDate = new Date(serviceDateStr);
-  const nextServiceDate = addMonths(serviceDate, 3);
 
-  await db.insert(serviceRecords).values({
-    vehicleId,
-    serviceDate: serviceDate.toISOString().split("T")[0],
-    type: type as "rutin" | "besar" | "lainnya",
-    notes,
-    nextServiceDate: nextServiceDate.toISOString().split("T")[0],
-  });
+  try {
+    await db.insert(serviceRecords).values({
+      vehicleId,
+      serviceDate: serviceDate.toISOString().split("T")[0],
+      type: type as "rutin" | "besar" | "lainnya",
+      notes,
+      nextServiceDate: addMonths(serviceDate, SERVICE_MONTHS).toISOString().split("T")[0],
+    });
 
-  revalidatePath(`/vehicles/${vehicleId}`);
-  revalidatePath("/");
-  return { success: true };
+    revalidatePath(`/vehicles/${vehicleId}`);
+    revalidatePath("/");
+    return { success: true };
+  } catch (error) {
+    console.error("addServiceRecord:", error);
+    return { error: "Gagal menyimpan data servis." };
+  }
 }

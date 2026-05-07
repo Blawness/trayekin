@@ -18,18 +18,22 @@ type ToastContextValue = {
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
-let nextId = 0;
+function useNextId() {
+  const [ref] = useState(() => ({ current: 0 }));
+  return () => ref.current++;
+}
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const getNextId = useNextId();
 
   const toast = useCallback((message: string, type: ToastType = "success") => {
-    const id = nextId++;
+    const id = getNextId();
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 4000);
-  }, []);
+  }, [getNextId]);
 
   const dismiss = useCallback((id: number) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));

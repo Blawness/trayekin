@@ -1,5 +1,7 @@
 export type Status = "aman" | "mendekati" | "terlambat";
 
+const MENDEKATI_DAYS = 30;
+
 export function getStatus(targetDate: Date): Status {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
@@ -11,7 +13,7 @@ export function getStatus(targetDate: Date): Status {
   );
 
   if (diffDays < 0) return "terlambat";
-  if (diffDays <= 30) return "mendekati";
+  if (diffDays <= MENDEKATI_DAYS) return "mendekati";
   return "aman";
 }
 
@@ -50,3 +52,5 @@ export function formatDate(date: Date): string {
     year: "numeric",
   });
 }
+
+export const ROLLING_WINDOW_DAYS = 30;

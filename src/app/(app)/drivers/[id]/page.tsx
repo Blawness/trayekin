@@ -3,7 +3,7 @@ import { getLedgerEntriesByDriver } from "@/lib/actions/ledger";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RefreshButton } from "@/components/refresh-button";
-import { formatDate } from "@/lib/utils/status";
+import { formatDate, ROLLING_WINDOW_DAYS } from "@/lib/utils/status";
 import { notFound } from "next/navigation";
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -11,12 +11,13 @@ type PageProps = { params: Promise<{ id: string }> };
 export default async function DriverDetailPage({ params }: PageProps) {
   const { id } = await params;
 
-  const driver = await getDriver(id);
+  const [driver, ledgerEntries] = await Promise.all([
+    getDriver(id),
+    getLedgerEntriesByDriver(id),
+  ]);
   if (!driver) notFound();
-
-  const ledgerEntries = await getLedgerEntriesByDriver(driver.id);
   const now = new Date();
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(now.getTime() - ROLLING_WINDOW_DAYS * 24 * 60 * 60 * 1000);
 
   const recentEntries = ledgerEntries.filter(
     (e) => new Date(e.date) >= thirtyDaysAgo

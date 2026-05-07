@@ -3,6 +3,7 @@ import { getLedgerEntries } from "@/lib/actions/ledger";
 import { getPartReplacements } from "@/lib/actions/parts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ROLLING_WINDOW_DAYS } from "@/lib/utils/status";
 
 export default async function ReportsPage() {
   const vehicles = await getVehicles();
@@ -18,7 +19,7 @@ export default async function ReportsPage() {
 
   // Fetch ledger for each vehicle (last 30 days)
   const now = new Date();
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(now.getTime() - ROLLING_WINDOW_DAYS * 24 * 60 * 60 * 1000);
 
   const vehicleReports = await Promise.all(
     vehicles.map(async (v) => {

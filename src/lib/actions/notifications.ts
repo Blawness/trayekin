@@ -10,47 +10,57 @@ export async function getNotifications() {
   const session = await auth();
   if (!session?.user) return [];
 
-  const notificationList = await db
-    .select()
-    .from(notifications)
-    .where(eq(notifications.userId, session.user.id!))
-    .orderBy(desc(notifications.createdAt))
-    .limit(20);
+  try {
+    const notificationList = await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.userId, session.user.id!))
+      .orderBy(desc(notifications.createdAt))
+      .limit(20);
 
-  if (notificationList.length === 0) return [];
+    if (notificationList.length === 0) return [];
 
-  const vehicleIds = [
-    ...new Set(notificationList.map((n) => n.vehicleId)),
-  ];
+    const vehicleIds = [
+      ...new Set(notificationList.map((n) => n.vehicleId)),
+    ];
 
-  const vehicleList = await db
-    .select()
-    .from(vehicles)
-    .where(inArray(vehicles.id, vehicleIds));
+    const vehicleList = await db
+      .select()
+      .from(vehicles)
+      .where(inArray(vehicles.id, vehicleIds));
 
-  const vehicleMap = new Map(vehicleList.map((v) => [v.id, v]));
+    const vehicleMap = new Map(vehicleList.map((v) => [v.id, v]));
 
-  return notificationList.map((n) => ({
-    ...n,
-    vehicle: vehicleMap.get(n.vehicleId) ?? null,
-  }));
+    return notificationList.map((n) => ({
+      ...n,
+      vehicle: vehicleMap.get(n.vehicleId) ?? null,
+    }));
+  } catch (error) {
+    console.error("getNotifications:", error);
+    return [];
+  }
 }
 
 export async function getUnreadCount() {
   const session = await auth();
   if (!session?.user) return 0;
 
-  const [result] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(notifications)
-    .where(
-      and(
-        eq(notifications.userId, session.user.id!),
-        isNull(notifications.isRead),
-      )
-    );
+  try {
+    const [result] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(notifications)
+      .where(
+        and(
+          eq(notifications.userId, session.user.id!),
+          isNull(notifications.isRead),
+        )
+      );
 
-  return Number(result?.count ?? 0);
+    return Number(result?.count ?? 0);
+  } catch (error) {
+    console.error("getUnreadCount:", error);
+    return 0;
+  }
 }
 
 export async function markAsRead(notificationIds: string[]) {
@@ -59,10 +69,14 @@ export async function markAsRead(notificationIds: string[]) {
 
   if (notificationIds.length === 0) return;
 
-  await db
-    .update(notifications)
-    .set({ isRead: new Date() })
-    .where(inArray(notifications.id, notificationIds));
+  try {
+    await db
+      .update(notifications)
+      .set({ isRead: new Date() })
+      .where(inArray(notifications.id, notificationIds));
 
-  revalidatePath("/");
+    revalidatePath("/");
+  } catch (error) {
+    console.error("markAsRead:", error);
+  }
 }

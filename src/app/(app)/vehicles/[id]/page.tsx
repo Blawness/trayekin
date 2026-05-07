@@ -5,13 +5,17 @@ import { addStnkRecord } from "@/lib/actions/stnk";
 import { addLedgerEntry, getLedgerEntries } from "@/lib/actions/ledger";
 import { addPartReplacement, getPartReplacements } from "@/lib/actions/parts";
 import { getDrivers } from "@/lib/actions/drivers";
-import { getStatus, getStatusLabel, getStatusColor, formatDate } from "@/lib/utils/status";
+import { getStatus, getStatusLabel, getStatusColor, formatDate, ROLLING_WINDOW_DAYS } from "@/lib/utils/status";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RefreshButton } from "@/components/refresh-button";
+import { LedgerFormSection } from "./_sections/ledger-form";
+import { PartFormSection } from "./_sections/part-form";
+import { LedgerHistorySection } from "./_sections/ledger-history";
+import { PartHistorySection } from "./_sections/part-history";
 import { notFound } from "next/navigation";
 
 async function addKirRecord(formData: FormData) {
@@ -71,7 +75,7 @@ export default async function VehicleDetailPage({
 
   // Ledger summary (last 30 days)
   const now = new Date();
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(now.getTime() - ROLLING_WINDOW_DAYS * 24 * 60 * 60 * 1000);
   const recentLedger = ledgerEntries.filter(
     (e) => new Date(e.date) >= thirtyDaysAgo
   );
@@ -228,89 +232,10 @@ export default async function VehicleDetailPage({
       </Card>
 
       {/* Setoran Harian */}
-      <Card className="hover:shadow-md transition-shadow">
-        <CardHeader>
-          <CardTitle className="text-base">Catat Setoran Harian</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form action={addLedger} className="space-y-3">
-            <input type="hidden" name="vehicleId" value={vehicle.id} />
-            <div className="space-y-2">
-              <Label htmlFor="ledgerDate">Tanggal</Label>
-              <Input id="ledgerDate" name="date" type="date" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="driverId">Sopir</Label>
-              <select
-                id="driverId"
-                name="driverId"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <option value="">-- Pilih sopir --</option>
-                {driverList.map((d) => (
-                  <option key={d.id} value={d.id}>{d.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="revenue">Pendapatan (Rp)</Label>
-                <Input id="revenue" name="revenue" type="number" placeholder="0" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="expenses">Pengeluaran (Rp)</Label>
-                <Input id="expenses" name="expenses" type="number" placeholder="0" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ledgerNotes">Catatan</Label>
-              <Input id="ledgerNotes" name="notes" placeholder="Supir, BBM, parkir..." />
-            </div>
-            <Button type="submit" size="sm">Simpan</Button>
-          </form>
-        </CardContent>
-      </Card>
+      <LedgerFormSection vehicleId={vehicle.id} drivers={driverList} action={addLedger} />
 
       {/* Ganti Suku Cadang */}
-      <Card className="hover:shadow-md transition-shadow">
-        <CardHeader>
-          <CardTitle className="text-base">Catat Ganti Suku Cadang</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form action={addPart} className="space-y-3">
-            <input type="hidden" name="vehicleId" value={vehicle.id} />
-            <div className="space-y-2">
-              <Label htmlFor="partName">Nama Suku Cadang *</Label>
-              <Input id="partName" name="partName" placeholder="Kampas rem, ban, aki..." required />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="partDate">Tanggal Ganti</Label>
-                <Input id="partDate" name="date" type="date" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cost">Biaya (Rp)</Label>
-                <Input id="cost" name="cost" type="number" placeholder="0" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="odometer">Kilometer</Label>
-                <Input id="odometer" name="odometer" type="number" placeholder="KM" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lifespanMonths">Umur Pakai (bulan)</Label>
-                <Input id="lifespanMonths" name="lifespanMonths" type="number" placeholder="Contoh: 6" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="partNotes">Catatan</Label>
-              <Input id="partNotes" name="notes" placeholder="Merk, toko..." />
-            </div>
-            <Button type="submit" size="sm">Simpan</Button>
-          </form>
-        </CardContent>
-      </Card>
+      <PartFormSection vehicleId={vehicle.id} action={addPart} />
 
       {/* KIR History */}
       {vehicle.kirRecords.length > 0 && (
@@ -388,79 +313,10 @@ export default async function VehicleDetailPage({
       )}
 
       {/* Setoran History */}
-      {ledgerEntries.length > 0 && (
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-base">Riwayat Setoran</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {ledgerEntries.slice(0, 30).map((e) => (
-                <div key={e.id} className="flex justify-between text-sm border-b pb-2">
-                  <div>
-                    <div>{formatDate(new Date(e.date))}</div>
-                    {e.notes && <div className="text-xs text-muted-foreground">{e.notes}</div>}
-                  </div>
-                  <div className="text-right">
-                    <div className="text-green-600">+Rp {e.revenue.toLocaleString("id-ID")}</div>
-                    {e.expenses > 0 && (
-                      <div className="text-red-600 text-xs">-Rp {e.expenses.toLocaleString("id-ID")}</div>
-                    )}
-                    {e.expenses === 0 && e.revenue === 0 && (
-                      <div className="text-xs text-muted-foreground">Rp 0</div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <LedgerHistorySection entries={ledgerEntries} />
 
       {/* Parts History */}
-      {partList.length > 0 && (
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-base">Riwayat Suku Cadang</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {partList.map((p) => {
-                const dueStatus = p.nextReplaceDate
-                  ? getStatus(new Date(p.nextReplaceDate))
-                  : null;
-                return (
-                  <div key={p.id} className="flex justify-between text-sm border-b pb-2">
-                    <div>
-                      <div className="font-medium">{p.partName}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {formatDate(new Date(p.date))}
-                        {p.odometer && ` · ${p.odometer.toLocaleString("id-ID")} KM`}
-                        {p.cost > 0 && ` · Rp ${p.cost.toLocaleString("id-ID")}`}
-                      </div>
-                      {p.notes && (
-                        <div className="text-xs text-muted-foreground">{p.notes}</div>
-                      )}
-                    </div>
-                    <div className="text-right text-xs">
-                      {p.lifespanMonths && (
-                        <div className="text-muted-foreground">
-                          Umur: {p.lifespanMonths} bln
-                        </div>
-                      )}
-                      {p.nextReplaceDate && dueStatus && (
-                        <Badge className={`mt-0.5 ${getStatusColor(dueStatus)}`}>
-                          {getStatusLabel(dueStatus)}: {formatDate(new Date(p.nextReplaceDate))}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <PartHistorySection parts={partList} />
     </div>
   );
 }

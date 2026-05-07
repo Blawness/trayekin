@@ -7,6 +7,12 @@ import { auth } from "@/lib/auth";
 import { addMonths } from "@/lib/utils/status";
 import { eq, desc } from "drizzle-orm";
 
+const STNK_MONTHS: Record<string, number> = {
+  tahunan: 12,
+  lima_tahunan: 60,
+  asuransi: 12,
+};
+
 export async function addStnkRecord(formData: FormData) {
   const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
@@ -19,28 +25,38 @@ export async function addStnkRecord(formData: FormData) {
   if (!vehicleId || !startDateStr) return { error: "Data tidak lengkap." };
 
   const startDate = new Date(startDateStr);
-  const months = type === "lima_tahunan" ? 60 : type === "asuransi" ? 12 : 12;
+  const months = STNK_MONTHS[type] ?? 12;
 
-  await db.insert(stnkRecords).values({
-    vehicleId,
-    type: type as "tahunan" | "lima_tahunan" | "asuransi",
-    startDate: startDate.toISOString().split("T")[0],
-    endDate: addMonths(startDate, months).toISOString().split("T")[0],
-    notes: notes || null,
-  });
+  try {
+    await db.insert(stnkRecords).values({
+      vehicleId,
+      type: type as "tahunan" | "lima_tahunan" | "asuransi",
+      startDate: startDate.toISOString().split("T")[0],
+      endDate: addMonths(startDate, months).toISOString().split("T")[0],
+      notes: notes || null,
+    });
 
-  revalidatePath("/");
-  revalidatePath(`/vehicles/${vehicleId}`);
-  return { success: true };
+    revalidatePath("/");
+    revalidatePath(`/vehicles/${vehicleId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("addStnkRecord:", error);
+    return { error: "Gagal menyimpan data STNK." };
+  }
 }
 
 export async function getStnkRecords(vehicleId: string) {
   const session = await auth();
   if (!session?.user) return [];
 
-  return db
-    .select()
-    .from(stnkRecords)
-    .where(eq(stnkRecords.vehicleId, vehicleId))
-    .orderBy(desc(stnkRecords.startDate));
+  try {
+    return db
+      .select()
+      .from(stnkRecords)
+      .where(eq(stnkRecords.vehicleId, vehicleId))
+      .orderBy(desc(stnkRecords.startDate));
+  } catch (error) {
+    console.error("getStnkRecords:", error);
+    return [];
+  }
 }

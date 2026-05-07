@@ -27,37 +27,55 @@ export async function addPartReplacement(formData: FormData) {
     ? addMonths(date, lifespanMonths).toISOString().split("T")[0]
     : null;
 
-  await db.insert(partReplacements).values({
-    vehicleId,
-    partName,
-    cost: parseInt(costStr) || 0,
-    date: date.toISOString().split("T")[0],
-    odometer: parseInt(odometerStr) || null,
-    lifespanMonths,
-    nextReplaceDate,
-    notes: notes || null,
-  });
+  try {
+    await db.insert(partReplacements).values({
+      vehicleId,
+      partName,
+      cost: parseInt(costStr) || 0,
+      date: date.toISOString().split("T")[0],
+      odometer: parseInt(odometerStr) || null,
+      lifespanMonths,
+      nextReplaceDate,
+      notes: notes || null,
+    });
 
-  revalidatePath("/");
-  revalidatePath(`/vehicles/${vehicleId}`);
-  return { success: true };
+    revalidatePath("/");
+    revalidatePath(`/vehicles/${vehicleId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("addPartReplacement:", error);
+    return { error: "Gagal menyimpan data suku cadang." };
+  }
 }
 
 export async function getPartReplacements(vehicleId: string) {
   const session = await auth();
   if (!session?.user) return [];
 
-  return db
-    .select()
-    .from(partReplacements)
-    .where(eq(partReplacements.vehicleId, vehicleId))
-    .orderBy(desc(partReplacements.date));
+  try {
+    return db
+      .select()
+      .from(partReplacements)
+      .where(eq(partReplacements.vehicleId, vehicleId))
+      .orderBy(desc(partReplacements.date));
+  } catch (error) {
+    console.error("getPartReplacements:", error);
+    return [];
+  }
 }
 
 export async function getPartReplacementsDue(userId: string) {
-  return db
-    .select()
-    .from(partReplacements)
-    .where(eq(partReplacements.vehicleId, userId))
-    .orderBy(desc(partReplacements.nextReplaceDate));
+  const session = await auth();
+  if (!session?.user) return [];
+
+  try {
+    return db
+      .select()
+      .from(partReplacements)
+      .where(eq(partReplacements.vehicleId, userId))
+      .orderBy(desc(partReplacements.nextReplaceDate));
+  } catch (error) {
+    console.error("getPartReplacementsDue:", error);
+    return [];
+  }
 }
