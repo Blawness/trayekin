@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { appSettings } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
-import { eq } from "drizzle-orm";
 
 export type AppSetting = {
   key: string;
