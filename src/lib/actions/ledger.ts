@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { dailyLedger } from "@/lib/db/schema";
+import { dailyLedger, appSettings } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { eq, desc, sql, and, gte } from "drizzle-orm";
 
@@ -15,19 +15,35 @@ export async function addLedgerEntry(formData: FormData) {
   const vehicleId = formData.get("vehicleId") as string;
   const driverId = formData.get("driverId") as string;
   const dateStr = formData.get("date") as string;
+  const kmStr = formData.get("km") as string;
   const revenueStr = formData.get("revenue") as string;
   const expensesStr = formData.get("expenses") as string;
   const notes = formData.get("notes") as string;
 
   if (!vehicleId || !dateStr) return { error: "Data tidak lengkap." };
 
+  const km = kmStr ? parseInt(kmStr, 10) : null;
+
+  let revenue = 0;
+  if (km && km > 0) {
+    const settings = await db
+      .select()
+      .from(appSettings)
+      .where(eq(appSettings.key, "rate_per_km"));
+    const ratePerKm = settings.length > 0 ? parseInt(settings[0].value, 10) : 4500;
+    revenue = km * ratePerKm;
+  } else {
+    revenue = parseInt(revenueStr, 10) || 0;
+  }
+
   try {
     await db.insert(dailyLedger).values({
       vehicleId,
       driverId: driverId || null,
       date: dateStr,
-      revenue: parseInt(revenueStr) || 0,
-      expenses: parseInt(expensesStr) || 0,
+      km,
+      revenue,
+      expenses: parseInt(expensesStr, 10) || 0,
       notes: notes || null,
     });
 
