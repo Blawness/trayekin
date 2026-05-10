@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, Truck, Users, BarChart3 } from "lucide-react";
+import { House, Truck, Users, BarChart3, Settings } from "lucide-react";
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -40,6 +40,17 @@ export function BottomNav() {
         >
           <Users className="h-5 w-5" />
           <span>Sopir</span>
+        </Link>
+        <Link
+          href="/settings"
+          className={`flex flex-col items-center text-xs gap-1 transition-colors ${
+            pathname.startsWith("/settings")
+              ? "text-primary"
+              : "text-muted-foreground"
+          }`}
+        >
+          <Settings className="h-5 w-5" />
+          <span>Pengaturan</span>
         </Link>
         <Link
           href="/reports"
