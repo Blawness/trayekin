@@ -46,6 +46,14 @@ Initial rows:
 ALTER TABLE daily_ledger ADD COLUMN km INTEGER;
 ```
 - `km`: jarak tempuh hari itu (opsional, bisa null jika user belum input)
+- `revenue` tetap ada: untuk entry lama yang diinput manual, tetap dipakai. Untuk entry baru dengan km, revenue dihitung otomatis = km × rate_per_km saat save.
+
+### Tables: add `cost` column
+```sql
+ALTER TABLE service_records ADD COLUMN cost INTEGER DEFAULT 0;
+ALTER TABLE kir_records ADD COLUMN cost INTEGER DEFAULT 0;
+ALTER TABLE stnk_records ADD COLUMN cost INTEGER DEFAULT 0;
+```
 
 ---
 
@@ -83,10 +91,10 @@ Disimpan via server action `updateAppSettings`.
 │ Setoran Harian - B 1234 XYZ    │
 │                                 │
 │ Tanggal: [12/05/2026]          │
-│ KM Tempuh: [120]               │  ← NEW
+│ KM Tempuh: [120]               │  ← NEW (opsional)
 │ Rate: Rp 4.500/km              │  ← dari settings
-│ Revenue: Rp 540.000            │  ← auto = km × rate
-│ Biaya Lain: [50.000]           │
+│ Revenue: Rp 540.000            │  ← auto = km × rate (jika km diisi)
+│ Biaya Lain: [50.000]           │     atau manual input jika km kosong
 │ ─────────────────────          │
 │ Total Bersih: Rp 490.000       │  ← revenue − biaya
 └─────────────────────────────────┘
@@ -106,7 +114,7 @@ Disimpan via server action `updateAppSettings`.
 | Card | Formula |
 |------|---------|
 | Total Revenue | Σ(km × rate) |
-| Total Costs | service + parts + KIR(prorata) + STNK(prorata) + BBM(est) |
+| Total Costs | service + parts + KIR(prorata by actual duration) + STNK(prorata by actual duration) + BBM(est) |
 | Fleet Margin % | (Revenue − Costs) / Revenue × 100 |
 
 **Per-Vehicle Table:**
@@ -118,9 +126,9 @@ Disimpan via server action `updateAppSettings`.
 | Revenue | Σ(km × rate_per_km) |
 | Biaya Service | Σ(service_records.cost) |
 | Biaya Parts | Σ(part_replacements.cost) |
-| Biaya KIR (prorata) | Σ(KIR cost / 180 × days_in_period) |
-| Biaya STNK (prorata) | Σ(STNK cost / 365 × days_in_period) |
-| Estimasi BBM | (total_km / fuel_consumption) × fuel_price |
+| Biaya KIR (prorata) | Σ(KIR cost / actual_days_valid × days_in_period), actual_days_valid = end_date − start_date |
+| Biaya STNK (prorata) | Σ(STNK cost / actual_days_valid × days_in_period), actual_days_valid = end_date − start_date |
+| Estimasi BBM | (total_km / fuel_consumption) × fuel_price — label "Estimasi" karena ini kalkulasi, bukan pembelian aktual |
 | Total Biaya | sum of all costs |
 | Net Profit | Revenue − Total Biaya |
 | Margin % | Net / Revenue × 100 |
@@ -141,7 +149,9 @@ Disimpan via server action `updateAppSettings`.
 2. Fetch daily_ledger dalam periode (per vehicle)
 3. Fetch service_records, part_replacements, kir_records, stnk_records dalam periode
 4. Fetch app_settings untuk rate default
-5. Calculate metrics di memory (TypeScript)
+5. Calculate metrics di memory (TypeScript):
+   - Revenue per entry: jika km ada → km × rate; jika null → pakai field revenue existing
+   - KIR/STNK prorata: cost / actual_days_valid × days_in_period
 6. Return array `ProfitabilityRow[]`
 
 ### Key: Manual batch queries (hindari Drizzle relational queries untuk Neon compatibility)
@@ -157,3 +167,5 @@ Disimpan via server action `updateAppSettings`.
 - [ ] Sorter dan filter berfungsi
 - [ ] 30h/60h/90h period selector berfungsi
 - [ ] Rate change berlaku untuk kalkulasi baru (tidak mengubah data historis)
+- [ ] Entry lama tanpa km tetap tampil di laporan (revenue dari field existing)
+- [ ] Form ledger: jika km diisi, revenue auto-calculate; jika kosong, revenue manual input
