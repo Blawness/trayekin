@@ -5,6 +5,7 @@ import { addStnkRecord } from "@/lib/actions/stnk";
 import { addLedgerEntry, getLedgerEntries } from "@/lib/actions/ledger";
 import { addPartReplacement, getPartReplacements } from "@/lib/actions/parts";
 import { getDrivers } from "@/lib/actions/drivers";
+import { getAppSettings } from "@/lib/actions/settings";
 import { getStatus, getStatusLabel, getStatusColor, formatDate, ROLLING_WINDOW_DAYS } from "@/lib/utils/status";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -58,11 +59,15 @@ export default async function VehicleDetailPage({
   const vehicle = await getVehicle(id);
   if (!vehicle) notFound();
 
-  const [ledgerEntries, partList, driverList] = await Promise.all([
+  const [ledgerEntries, partList, driverList, settingsList] = await Promise.all([
     getLedgerEntries(id),
     getPartReplacements(id),
     getDrivers(),
+    getAppSettings(),
   ]);
+
+  const settingsMap = Object.fromEntries(settingsList.map((s) => [s.key, s.value]));
+  const ratePerKm = parseInt(settingsMap["rate_per_km"] || "4500", 10);
 
   const latestKir = vehicle.kirRecords[0];
   const latestService = vehicle.serviceRecords[0];
@@ -232,7 +237,7 @@ export default async function VehicleDetailPage({
       </Card>
 
       {/* Setoran Harian */}
-      <LedgerFormSection vehicleId={vehicle.id} drivers={driverList} action={addLedger} />
+      <LedgerFormSection vehicleId={vehicle.id} drivers={driverList} action={addLedger} ratePerKm={ratePerKm} />
 
       {/* Ganti Suku Cadang */}
       <PartFormSection vehicleId={vehicle.id} action={addPart} />

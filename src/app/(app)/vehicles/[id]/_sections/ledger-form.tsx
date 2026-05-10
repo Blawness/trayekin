@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,9 +13,14 @@ type Props = {
   vehicleId: string;
   drivers: Driver[];
   action: (formData: FormData) => void;
+  ratePerKm: number;
 };
 
-export function LedgerFormSection({ vehicleId, drivers, action }: Props) {
+export function LedgerFormSection({ vehicleId, drivers, action, ratePerKm }: Props) {
+  const [km, setKm] = useState("");
+  const [manualRevenue, setManualRevenue] = useState("");
+  const autoRevenue = km ? parseInt(km, 10) * ratePerKm : null;
+
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader>
@@ -21,6 +29,8 @@ export function LedgerFormSection({ vehicleId, drivers, action }: Props) {
       <CardContent>
         <form action={action} className="space-y-3">
           <input type="hidden" name="vehicleId" value={vehicleId} />
+          <input type="hidden" name="km" value={km} />
+          <input type="hidden" name="revenue" value={autoRevenue ?? manualRevenue} />
           <div className="space-y-2">
             <Label htmlFor="ledgerDate">Tanggal</Label>
             <Input id="ledgerDate" name="date" type="date" required />
@@ -40,15 +50,37 @@ export function LedgerFormSection({ vehicleId, drivers, action }: Props) {
               ))}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="revenue">Pendapatan (Rp)</Label>
-              <Input id="revenue" name="revenue" type="number" placeholder="0" />
+          <div className="space-y-2">
+            <Label htmlFor="km">KM Tempuh</Label>
+            <Input
+              id="km"
+              name="km_input"
+              type="number"
+              placeholder="Kosongkan jika input manual"
+              value={km}
+              onChange={(e) => setKm(e.target.value)}
+            />
+          </div>
+          {autoRevenue !== null && (
+            <div className="text-sm text-muted-foreground">
+              Pendapatan: Rp {autoRevenue.toLocaleString("id-ID")} ({km} km × Rp {ratePerKm.toLocaleString("id-ID")}/km)
             </div>
+          )}
+          {autoRevenue === null && (
             <div className="space-y-2">
-              <Label htmlFor="expenses">Pengeluaran (Rp)</Label>
-              <Input id="expenses" name="expenses" type="number" placeholder="0" />
+              <Label htmlFor="manualRevenue">Pendapatan (Rp)</Label>
+              <Input
+                id="manualRevenue"
+                type="number"
+                placeholder="0"
+                value={manualRevenue}
+                onChange={(e) => setManualRevenue(e.target.value)}
+              />
             </div>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="expenses">Pengeluaran (Rp)</Label>
+            <Input id="expenses" name="expenses" type="number" placeholder="0" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="ledgerNotes">Catatan</Label>
