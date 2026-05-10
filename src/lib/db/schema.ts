@@ -5,6 +5,7 @@ import {
   timestamp,
   date,
   integer,
+  serial,
   pgEnum,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
@@ -68,6 +69,7 @@ export const kirRecords = pgTable("kir_records", {
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
   notes: text("notes"),
+  cost: integer("cost").default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -79,6 +81,7 @@ export const serviceRecords = pgTable("service_records", {
   serviceDate: date("service_date").notNull(),
   type: serviceTypeEnum("type").notNull().default("rutin"),
   notes: text("notes"),
+  cost: integer("cost").default(0),
   nextServiceDate: date("next_service_date").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -92,6 +95,7 @@ export const stnkRecords = pgTable("stnk_records", {
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
   notes: text("notes"),
+  cost: integer("cost").default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -105,6 +109,7 @@ export const dailyLedger = pgTable("daily_ledger", {
   revenue: integer("revenue").notNull().default(0),
   expenses: integer("expenses").notNull().default(0),
   notes: text("notes"),
+  km: integer("km"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -147,6 +152,14 @@ export const notifications = pgTable("notifications", {
   isRead: timestamp("is_read"),
   dueDate: date("due_date"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const appSettings = pgTable("app_settings", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  type: text("type").default("string"),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Relations
