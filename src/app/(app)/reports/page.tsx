@@ -77,7 +77,7 @@ export default async function ReportsPage({
         {periods.map((p) => (
           <Link
             key={p.value}
-            href={`/reports?period=${p.value}`}
+            href={`/reports?period=${p.value}&sort=${sortKey}&dir=${sortDir}`}
             className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
               period === p.value
                 ? "bg-primary text-primary-foreground border-primary"
