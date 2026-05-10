@@ -29,11 +29,15 @@ export async function getAppSettings(): Promise<AppSetting[]> {
 
 export async function updateAppSettings(formData: FormData) {
   const session = await auth();
-  if (!session?.user) return { error: "Unauthorized" };
+  if (!session?.user) throw new Error("Unauthorized");
 
   const ratePerKm = formData.get("rate_per_km") as string;
   const fuelPrice = formData.get("fuel_price_per_liter") as string;
   const fuelConsumption = formData.get("fuel_consumption_km_per_l") as string;
+
+  if (!ratePerKm || !fuelPrice || !fuelConsumption) {
+    return { error: "Semua field wajib diisi." };
+  }
 
   const settings = [
     { key: "rate_per_km", value: ratePerKm },
@@ -44,9 +48,12 @@ export async function updateAppSettings(formData: FormData) {
   try {
     for (const s of settings) {
       await db
-        .update(appSettings)
-        .set({ value: s.value, updatedAt: new Date() })
-        .where(eq(appSettings.key, s.key));
+        .insert(appSettings)
+        .values({ key: s.key, value: s.value, type: "number" })
+        .onConflictDoUpdate({
+          target: appSettings.key,
+          set: { value: s.value, updatedAt: new Date() },
+        });
     }
 
     revalidatePath("/");
