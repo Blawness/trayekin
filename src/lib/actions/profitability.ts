@@ -1,0 +1,149 @@
+"use server";
+
+import { db } from "@/lib/db";
+import {
+  vehicles,
+  dailyLedger,
+  serviceRecords,
+  partReplacements,
+  kirRecords,
+  stnkRecords,
+  appSettings,
+} from "@/lib/db/schema";
+import { auth } from "@/lib/auth";
+import { eq, inArray, and, gte, lte } from "drizzle-orm";
+
+export type ProfitabilityRow = {
+  vehicleId: string;
+  plate: string;
+  name: string;
+  totalKm: number;
+  revenue: number;
+  costService: number;
+  costParts: number;
+  costKir: number;
+  costStnk: number;
+  costFuel: number;
+  totalCost: number;
+  netProfit: number;
+  marginPercent: number;
+};
+
+export async function getProfitabilityReport(
+  periodStart: string,
+  periodEnd: string
+): Promise<ProfitabilityRow[]> {
+  const session = await auth();
+  if (!session?.user) return [];
+
+  try {
+    // Fetch settings
+    const settingsRows = await db.select().from(appSettings);
+    const settingsMap = Object.fromEntries(settingsRows.map((s) => [s.key, parseInt(s.value, 10)]));
+    const ratePerKm = settingsMap["rate_per_km"] || 4500;
+    const fuelPrice = settingsMap["fuel_price_per_liter"] || 10000;
+    const fuelConsumption = settingsMap["fuel_consumption_km_per_l"] || 10;
+
+    const periodDays =
+      (new Date(periodEnd).getTime() - new Date(periodStart).getTime()) / (1000 * 60 * 60 * 24);
+
+    // Fetch vehicles
+    const vehicleList = await db
+      .select()
+      .from(vehicles)
+      .where(eq(vehicles.userId, session.user.id!));
+
+    if (vehicleList.length === 0) return [];
+
+    const vehicleIds = vehicleList.map((v) => v.id);
+
+    // Fetch ledger entries in period
+    const ledgerEntries = await db
+      .select()
+      .from(dailyLedger)
+      .where(and(inArray(dailyLedger.vehicleId, vehicleIds), gte(dailyLedger.date, periodStart), lte(dailyLedger.date, periodEnd)));
+
+    // Fetch service records in period
+    const services = await db
+      .select()
+      .from(serviceRecords)
+      .where(and(inArray(serviceRecords.vehicleId, vehicleIds), gte(serviceRecords.serviceDate, periodStart), lte(serviceRecords.serviceDate, periodEnd)));
+
+    // Fetch part replacements in period
+    const parts = await db
+      .select()
+      .from(partReplacements)
+      .where(and(inArray(partReplacements.vehicleId, vehicleIds), gte(partReplacements.date, periodStart), lte(partReplacements.date, periodEnd)));
+
+    // Fetch KIR records that overlap with period
+    const kirList = await db
+      .select()
+      .from(kirRecords)
+      .where(and(inArray(kirRecords.vehicleId, vehicleIds), lte(kirRecords.startDate, periodEnd), gte(kirRecords.endDate, periodStart)));
+
+    // Fetch STNK records that overlap with period
+    const stnkList = await db
+      .select()
+      .from(stnkRecords)
+      .where(and(inArray(stnkRecords.vehicleId, vehicleIds), lte(stnkRecords.startDate, periodEnd), gte(stnkRecords.endDate, periodStart)));
+
+    // Calculate per vehicle
+    return vehicleList.map((v) => {
+      const vLedger = ledgerEntries.filter((e) => e.vehicleId === v.id);
+      const vServices = services.filter((s) => s.vehicleId === v.id);
+      const vParts = parts.filter((p) => p.vehicleId === v.id);
+      const vKir = kirList.filter((k) => k.vehicleId === v.id);
+      const vStnk = stnkList.filter((s) => s.vehicleId === v.id);
+
+      const totalKm = vLedger.reduce((sum, e) => sum + (e.km || 0), 0);
+      const revenue = vLedger.reduce((sum, e) => {
+        if (e.km && e.km > 0) return sum + e.km * ratePerKm;
+        return sum + e.revenue;
+      }, 0);
+
+      const costService = vServices.reduce((sum, s) => sum + (s.cost || 0), 0);
+      const costParts = vParts.reduce((sum, p) => sum + p.cost, 0);
+
+      // KIR prorata: cost / actual_days × days_in_period
+      const costKir = vKir.reduce((sum, k) => {
+        const actualDays =
+          (new Date(k.endDate).getTime() - new Date(k.startDate).getTime()) / (1000 * 60 * 60 * 24);
+        if (actualDays <= 0) return sum;
+        return sum + ((k.cost || 0) / actualDays) * periodDays;
+      }, 0);
+
+      // STNK prorata: cost / actual_days × days_in_period
+      const costStnk = vStnk.reduce((sum, s) => {
+        const actualDays =
+          (new Date(s.endDate).getTime() - new Date(s.startDate).getTime()) / (1000 * 60 * 60 * 24);
+        if (actualDays <= 0) return sum;
+        return sum + ((s.cost || 0) / actualDays) * periodDays;
+      }, 0);
+
+      const costFuel = totalKm > 0 ? (totalKm / fuelConsumption) * fuelPrice : 0;
+
+      const totalCost = costService + costParts + costKir + costStnk + costFuel;
+      const netProfit = revenue - totalCost;
+      const marginPercent = revenue > 0 ? (netProfit / revenue) * 100 : 0;
+
+      return {
+        vehicleId: v.id,
+        plate: v.plate,
+        name: v.name || "Tanpa nama",
+        totalKm,
+        revenue,
+        costService,
+        costParts,
+        costKir: Math.round(costKir),
+        costStnk: Math.round(costStnk),
+        costFuel: Math.round(costFuel),
+        totalCost: Math.round(totalCost),
+        netProfit: Math.round(netProfit),
+        marginPercent: Math.round(marginPercent * 100) / 100,
+      };
+    });
+  } catch (error) {
+    console.error("getProfitabilityReport:", error);
+    return [];
+  }
+}
