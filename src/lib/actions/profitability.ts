@@ -122,7 +122,10 @@ export async function getProfitabilityReport(
 
       const costFuel = totalKm > 0 ? (totalKm / fuelConsumption) * fuelPrice : 0;
 
-      const totalCost = costService + costParts + costKir + costStnk + costFuel;
+      const roundedKir = Math.round(costKir);
+      const roundedStnk = Math.round(costStnk);
+      const roundedFuel = Math.round(costFuel);
+      const totalCost = costService + costParts + roundedKir + roundedStnk + roundedFuel;
       const netProfit = revenue - totalCost;
       const marginPercent = revenue > 0 ? (netProfit / revenue) * 100 : 0;
 
@@ -134,11 +137,11 @@ export async function getProfitabilityReport(
         revenue,
         costService,
         costParts,
-        costKir: Math.round(costKir),
-        costStnk: Math.round(costStnk),
-        costFuel: Math.round(costFuel),
-        totalCost: Math.round(totalCost),
-        netProfit: Math.round(netProfit),
+        costKir: roundedKir,
+        costStnk: roundedStnk,
+        costFuel: roundedFuel,
+        totalCost,
+        netProfit,
         marginPercent: Math.round(marginPercent * 100) / 100,
       };
     });
