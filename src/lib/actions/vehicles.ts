@@ -59,7 +59,7 @@ export async function createVehicle(formData: FormData) {
   }
 }
 
-export async function getVehicles() {
+export async function getVehicles(limit = 50, offset = 0) {
   const session = await auth();
   if (!session?.user) return [];
 
@@ -67,7 +67,9 @@ export async function getVehicles() {
     const vehicleList = await db
       .select()
       .from(vehicles)
-      .where(eq(vehicles.userId, session.user.id!));
+      .where(eq(vehicles.userId, session.user.id!))
+      .limit(limit)
+      .offset(offset);
 
     if (vehicleList.length === 0) return [];
 
@@ -120,17 +122,20 @@ export async function getVehicle(id: string) {
         .select()
         .from(kirRecords)
         .where(eq(kirRecords.vehicleId, id))
-        .orderBy(desc(kirRecords.startDate)),
+        .orderBy(desc(kirRecords.startDate))
+        .limit(30),
       db
         .select()
         .from(serviceRecords)
         .where(eq(serviceRecords.vehicleId, id))
-        .orderBy(desc(serviceRecords.serviceDate)),
+        .orderBy(desc(serviceRecords.serviceDate))
+        .limit(30),
       db
         .select()
         .from(stnkRecords)
         .where(eq(stnkRecords.vehicleId, id))
-        .orderBy(desc(stnkRecords.startDate)),
+        .orderBy(desc(stnkRecords.startDate))
+        .limit(30),
     ]);
 
     return {

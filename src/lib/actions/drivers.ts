@@ -44,7 +44,8 @@ export async function getDrivers() {
     return db
       .select()
       .from(drivers)
-      .where(eq(drivers.userId, session.user.id!));
+      .where(eq(drivers.userId, session.user.id!))
+      .limit(50);
   } catch (error) {
     console.error("getDrivers:", error);
     return [];

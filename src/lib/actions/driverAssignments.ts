@@ -163,7 +163,8 @@ export async function getDriverSummaries(
           gte(dailyLedger.date, periodStart),
           lte(dailyLedger.date, periodEnd)
         )
-      );
+      )
+      .limit(500);
 
     const driverMap = Object.fromEntries(
       allDrivers.map((d) => [d.id, d.name])

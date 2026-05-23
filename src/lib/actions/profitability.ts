@@ -61,31 +61,36 @@ export async function getProfitabilityReport(
     const ledgerEntries = await db
       .select()
       .from(dailyLedger)
-      .where(and(inArray(dailyLedger.vehicleId, vehicleIds), gte(dailyLedger.date, periodStart), lte(dailyLedger.date, periodEnd)));
+      .where(and(inArray(dailyLedger.vehicleId, vehicleIds), gte(dailyLedger.date, periodStart), lte(dailyLedger.date, periodEnd)))
+      .limit(500);
 
     // Fetch service records in period
     const services = await db
       .select()
       .from(serviceRecords)
-      .where(and(inArray(serviceRecords.vehicleId, vehicleIds), gte(serviceRecords.serviceDate, periodStart), lte(serviceRecords.serviceDate, periodEnd)));
+      .where(and(inArray(serviceRecords.vehicleId, vehicleIds), gte(serviceRecords.serviceDate, periodStart), lte(serviceRecords.serviceDate, periodEnd)))
+      .limit(500);
 
     // Fetch part replacements in period
     const parts = await db
       .select()
       .from(partReplacements)
-      .where(and(inArray(partReplacements.vehicleId, vehicleIds), gte(partReplacements.date, periodStart), lte(partReplacements.date, periodEnd)));
+      .where(and(inArray(partReplacements.vehicleId, vehicleIds), gte(partReplacements.date, periodStart), lte(partReplacements.date, periodEnd)))
+      .limit(500);
 
     // Fetch KIR records that overlap with period
     const kirList = await db
       .select()
       .from(kirRecords)
-      .where(and(inArray(kirRecords.vehicleId, vehicleIds), lte(kirRecords.startDate, periodEnd), gte(kirRecords.endDate, periodStart)));
+      .where(and(inArray(kirRecords.vehicleId, vehicleIds), lte(kirRecords.startDate, periodEnd), gte(kirRecords.endDate, periodStart)))
+      .limit(500);
 
     // Fetch STNK records that overlap with period
     const stnkList = await db
       .select()
       .from(stnkRecords)
-      .where(and(inArray(stnkRecords.vehicleId, vehicleIds), lte(stnkRecords.startDate, periodEnd), gte(stnkRecords.endDate, periodStart)));
+      .where(and(inArray(stnkRecords.vehicleId, vehicleIds), lte(stnkRecords.startDate, periodEnd), gte(stnkRecords.endDate, periodStart)))
+      .limit(500);
 
     // Calculate per vehicle
     return vehicleList.map((v) => {

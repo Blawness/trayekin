@@ -89,7 +89,8 @@ export async function getPartReplacements(vehicleId: string) {
       .select()
       .from(partReplacements)
       .where(eq(partReplacements.vehicleId, vehicleId))
-      .orderBy(desc(partReplacements.date));
+      .orderBy(desc(partReplacements.date))
+      .limit(50);
   } catch (error) {
     console.error("getPartReplacements:", error);
     return [];
