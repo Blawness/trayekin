@@ -33,7 +33,7 @@ export async function addServiceRecord(formData: FormData) {
     });
 
     revalidatePath(`/vehicles/${vehicleId}`);
-    revalidatePath("/");
+    revalidatePath("/reports");
     return { success: true };
   } catch (error) {
     console.error("addServiceRecord:", error);

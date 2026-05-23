@@ -6,12 +6,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getStatus, getStatusLabel, getStatusColor } from "@/lib/utils/status";
-import { Plus, Truck, RefreshCw } from "lucide-react";
+import { Plus, Truck, RefreshCw, AlertTriangle } from "lucide-react";
 import type { getVehicles } from "@/lib/actions/vehicles";
 
 type Vehicle = Awaited<ReturnType<typeof getVehicles>>[number];
 
-export function DashboardContent({ vehicles }: { vehicles: Vehicle[] }) {
+export function DashboardContent({
+  vehicles,
+  showCronWarning,
+}: {
+  vehicles: Vehicle[];
+  showCronWarning: boolean;
+}) {
   const router = useRouter();
 
   const total = vehicles.length;
@@ -35,6 +41,15 @@ export function DashboardContent({ vehicles }: { vehicles: Vehicle[] }) {
 
   return (
     <div className="space-y-6">
+      {showCronWarning && (
+        <div className="flex items-center gap-2 rounded-md border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-800 dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-300">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          <span>
+            Peringatan: Cron check-reminders terakhir berjalan lebih dari 25 jam
+            yang lalu / gagal. Periksa pengaturan cron.
+          </span>
+        </div>
+      )}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Card className="border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
           <CardContent className="p-3">

@@ -39,8 +39,8 @@ export async function addPartReplacement(formData: FormData) {
       notes: notes || null,
     });
 
-    revalidatePath("/");
     revalidatePath(`/vehicles/${vehicleId}`);
+    revalidatePath("/reports");
     return { success: true };
   } catch (error) {
     console.error("addPartReplacement:", error);

@@ -1,4 +1,5 @@
 import { getProfitabilityReport } from "@/lib/actions/profitability";
+import { getDriverSummaries } from "@/lib/actions/driverAssignments";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
@@ -23,6 +24,8 @@ export default async function ReportsPage({
   const periodEnd = now.toISOString().split("T")[0];
 
   const rows = await getProfitabilityReport(periodStart, periodEnd);
+
+  const driverSummaries = await getDriverSummaries(periodStart, periodEnd);
 
   // Filter: only vehicles with activity in period
   const activeRows = rows.filter(
@@ -204,6 +207,37 @@ export default async function ReportsPage({
       {sorted.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
           <p>Tidak ada aktivitas dalam periode ini.</p>
+        </div>
+      )}
+
+      {/* Ringkasan Per Sopir */}
+      {driverSummaries.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-lg font-bold">Ringkasan Per Sopir</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left text-muted-foreground">
+                  <th className="pb-2 pr-2">Sopir</th>
+                  <th className="pb-2 pr-2 text-right">Total KM</th>
+                  <th className="pb-2 pr-2 text-right">Hari Bertugas</th>
+                  <th className="pb-2 text-right">Rata-rata Pendapatan/Hari</th>
+                </tr>
+              </thead>
+              <tbody>
+                {driverSummaries.map((d) => (
+                  <tr key={d.driverId} className="border-b last:border-0">
+                    <td className="py-2 pr-2 font-medium">{d.driverName}</td>
+                    <td className="py-2 pr-2 text-right">{d.totalKm || "-"}</td>
+                    <td className="py-2 pr-2 text-right">{d.totalDays}</td>
+                    <td className="py-2 text-right text-green-600">
+                      Rp {d.avgDailyRevenue.toLocaleString("id-ID")}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

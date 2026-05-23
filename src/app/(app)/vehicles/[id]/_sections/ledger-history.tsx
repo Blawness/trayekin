@@ -11,9 +11,10 @@ type Entry = {
 
 type Props = {
   entries: Entry[];
+  driverNameByDate?: Record<string, string>;
 };
 
-export function LedgerHistorySection({ entries }: Props) {
+export function LedgerHistorySection({ entries, driverNameByDate }: Props) {
   if (entries.length === 0) return null;
 
   return (
@@ -27,6 +28,11 @@ export function LedgerHistorySection({ entries }: Props) {
             <div key={e.id} className="flex justify-between text-sm border-b pb-2">
               <div>
                 <div>{formatDate(new Date(e.date))}</div>
+                {driverNameByDate?.[e.date] && (
+                  <div className="text-xs text-muted-foreground">
+                    Sopir: {driverNameByDate[e.date]}
+                  </div>
+                )}
                 {e.notes && (
                   <div className="text-xs text-muted-foreground">{e.notes}</div>
                 )}

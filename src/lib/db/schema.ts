@@ -7,6 +7,7 @@ import {
   integer,
   serial,
   pgEnum,
+  unique,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -110,6 +111,9 @@ export const dailyLedger = pgTable("daily_ledger", {
   expenses: integer("expenses").notNull().default(0),
   notes: text("notes"),
   km: integer("km"),
+  snapshotRatePerKm: integer("snapshot_rate_per_km"),
+  snapshotFuelPrice: integer("snapshot_fuel_price"),
+  snapshotFuelConsumption: integer("snapshot_fuel_consumption"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -154,13 +158,43 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const cronLogs = pgTable("cron_logs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  jobName: text("job_name").notNull(),
+  runAt: timestamp("run_at").defaultNow().notNull(),
+  status: text("status").notNull(),
+  recordsProcessed: integer("records_processed"),
+  errorMessage: text("error_message"),
+});
+
+export const driverAssignments = pgTable("driver_assignments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  driverId: uuid("driver_id")
+    .notNull()
+    .references(() => drivers.id, { onDelete: "cascade" }),
+  vehicleId: uuid("vehicle_id")
+    .notNull()
+    .references(() => vehicles.id, { onDelete: "cascade" }),
+  date: date("date").notNull(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+}, (table) => [
+  unique("driver_assignments_unique").on(table.driverId, table.vehicleId, table.date),
+]);
+
 export const appSettings = pgTable("app_settings", {
   id: serial("id").primaryKey(),
-  key: text("key").notNull().unique(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  key: text("key").notNull(),
   value: text("value").notNull(),
   type: text("type").default("string"),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  unique("app_settings_user_key_unique").on(table.userId, table.key),
+]);
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
@@ -168,6 +202,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   drivers: many(drivers),
   pushSubscriptions: many(pushSubscriptions),
   notifications: many(notifications),
+  appSettings: many(appSettings),
+  driverAssignments: many(driverAssignments),
 }));
 
 export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
@@ -178,11 +214,13 @@ export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
   dailyLedger: many(dailyLedger),
   partReplacements: many(partReplacements),
   notifications: many(notifications),
+  driverAssignments: many(driverAssignments),
 }));
 
 export const driversRelations = relations(drivers, ({ one, many }) => ({
   user: one(users, { fields: [drivers.userId], references: [users.id] }),
   dailyLedger: many(dailyLedger),
+  driverAssignments: many(driverAssignments),
 }));
 
 export const kirRecordsRelations = relations(kirRecords, ({ one }) => ({
@@ -239,5 +277,27 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
   vehicle: one(vehicles, {
     fields: [notifications.vehicleId],
     references: [vehicles.id],
+  }),
+}));
+
+export const appSettingsRelations = relations(appSettings, ({ one }) => ({
+  user: one(users, {
+    fields: [appSettings.userId],
+    references: [users.id],
+  }),
+}));
+
+export const driverAssignmentsRelations = relations(driverAssignments, ({ one }) => ({
+  driver: one(drivers, {
+    fields: [driverAssignments.driverId],
+    references: [drivers.id],
+  }),
+  vehicle: one(vehicles, {
+    fields: [driverAssignments.vehicleId],
+    references: [vehicles.id],
+  }),
+  user: one(users, {
+    fields: [driverAssignments.userId],
+    references: [users.id],
   }),
 }));

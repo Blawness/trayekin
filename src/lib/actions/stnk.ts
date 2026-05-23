@@ -36,8 +36,8 @@ export async function addStnkRecord(formData: FormData) {
       notes: notes || null,
     });
 
-    revalidatePath("/");
     revalidatePath(`/vehicles/${vehicleId}`);
+    revalidatePath("/reports");
     return { success: true };
   } catch (error) {
     console.error("addStnkRecord:", error);

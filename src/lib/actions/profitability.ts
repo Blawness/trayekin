@@ -38,7 +38,7 @@ export async function getProfitabilityReport(
 
   try {
     // Fetch settings
-    const settingsRows = await db.select().from(appSettings);
+    const settingsRows = await db.select().from(appSettings).where(eq(appSettings.userId, session.user.id!));
     const settingsMap = Object.fromEntries(settingsRows.map((s) => [s.key, parseInt(s.value, 10)]));
     const ratePerKm = settingsMap["rate_per_km"] || 4500;
     const fuelPrice = settingsMap["fuel_price_per_liter"] || 10000;
@@ -97,7 +97,10 @@ export async function getProfitabilityReport(
 
       const totalKm = vLedger.reduce((sum, e) => sum + (e.km || 0), 0);
       const revenue = vLedger.reduce((sum, e) => {
-        if (e.km && e.km > 0) return sum + e.km * ratePerKm;
+        if (e.km && e.km > 0) {
+          const entryRate = e.snapshotRatePerKm ?? ratePerKm;
+          return sum + e.km * entryRate;
+        }
         return sum + e.revenue;
       }, 0);
 
@@ -120,7 +123,14 @@ export async function getProfitabilityReport(
         return sum + ((s.cost || 0) / actualDays) * periodDays;
       }, 0);
 
-      const costFuel = totalKm > 0 ? (totalKm / fuelConsumption) * fuelPrice : 0;
+      const costFuel = vLedger.reduce((sum, e) => {
+        if (e.km && e.km > 0) {
+          const entryConsumption = e.snapshotFuelConsumption ?? fuelConsumption;
+          const entryPrice = e.snapshotFuelPrice ?? fuelPrice;
+          return sum + (e.km / entryConsumption) * entryPrice;
+        }
+        return sum;
+      }, 0);
 
       const roundedKir = Math.round(costKir);
       const roundedStnk = Math.round(costStnk);

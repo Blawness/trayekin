@@ -6,6 +6,11 @@ import { addLedgerEntry, getLedgerEntries } from "@/lib/actions/ledger";
 import { addPartReplacement, getPartReplacements } from "@/lib/actions/parts";
 import { getDrivers } from "@/lib/actions/drivers";
 import { getAppSettings } from "@/lib/actions/settings";
+import {
+  assignDriver as assignDriverAction,
+  removeAssignment as removeAssignmentAction,
+  getAssignmentsForVehicle,
+} from "@/lib/actions/driverAssignments";
 import { getStatus, getStatusLabel, getStatusColor, formatDate, ROLLING_WINDOW_DAYS } from "@/lib/utils/status";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +22,7 @@ import { LedgerFormSection } from "./_sections/ledger-form";
 import { PartFormSection } from "./_sections/part-form";
 import { LedgerHistorySection } from "./_sections/ledger-history";
 import { PartHistorySection } from "./_sections/part-history";
+import { DriverAssignmentSection } from "./_sections/driver-assignment";
 import { notFound } from "next/navigation";
 
 async function addKirRecord(formData: FormData) {
@@ -44,6 +50,20 @@ async function addPart(formData: FormData) {
   await addPartReplacement(formData);
 }
 
+async function assignDriver(formData: FormData) {
+  "use server";
+  const driverId = formData.get("driverId") as string;
+  const vehicleId = formData.get("vehicleId") as string;
+  const date = formData.get("date") as string;
+  await assignDriverAction(driverId, vehicleId, date);
+}
+
+async function removeAssignment(formData: FormData) {
+  "use server";
+  const assignmentId = formData.get("assignmentId") as string;
+  await removeAssignmentAction(assignmentId);
+}
+
 const STNK_LABELS: Record<string, string> = {
   tahunan: "Tahunan",
   lima_tahunan: "5 Tahunan",
@@ -59,12 +79,18 @@ export default async function VehicleDetailPage({
   const vehicle = await getVehicle(id);
   if (!vehicle) notFound();
 
-  const [ledgerEntries, partList, driverList, settingsList] = await Promise.all([
+  const [ledgerEntries, partList, driverList, settingsList, assignments] = await Promise.all([
     getLedgerEntries(id),
     getPartReplacements(id),
     getDrivers(),
     getAppSettings(),
+    getAssignmentsForVehicle(id),
   ]);
+
+  const driverNameByDate: Record<string, string> = {};
+  for (const a of assignments) {
+    driverNameByDate[a.date] = a.driverName;
+  }
 
   const settingsMap = Object.fromEntries(settingsList.map((s) => [s.key, s.value]));
   const ratePerKm = parseInt(settingsMap["rate_per_km"] || "4500", 10);
@@ -154,6 +180,15 @@ export default async function VehicleDetailPage({
           </Card>
         </div>
       )}
+
+      {/* Penugasan Sopir */}
+      <DriverAssignmentSection
+        vehicleId={vehicle.id}
+        drivers={driverList}
+        assignments={assignments}
+        assignAction={assignDriver}
+        removeAction={removeAssignment}
+      />
 
       {/* KIR Form */}
       <Card className="hover:shadow-md transition-shadow">
@@ -318,7 +353,7 @@ export default async function VehicleDetailPage({
       )}
 
       {/* Setoran History */}
-      <LedgerHistorySection entries={ledgerEntries} />
+      <LedgerHistorySection entries={ledgerEntries} driverNameByDate={driverNameByDate} />
 
       {/* Parts History */}
       <PartHistorySection parts={partList} />

@@ -25,13 +25,19 @@ export async function addLedgerEntry(formData: FormData) {
   const km = kmStr ? parseInt(kmStr, 10) : null;
 
   let revenue = 0;
+  let snapshotRatePerKm: number | null = null;
+  let snapshotFuelPrice: number | null = null;
+  let snapshotFuelConsumption: number | null = null;
+
   if (km && km > 0) {
-    const settings = await db
-      .select()
-      .from(appSettings)
-      .where(eq(appSettings.key, "rate_per_km"));
-    const ratePerKm = settings.length > 0 ? parseInt(settings[0].value, 10) : 4500;
-    revenue = km * ratePerKm;
+    const settings = await db.select().from(appSettings).where(eq(appSettings.userId, session.user.id!));
+    const settingsMap = Object.fromEntries(
+      settings.map((s) => [s.key, parseInt(s.value, 10)])
+    );
+    snapshotRatePerKm = settingsMap["rate_per_km"] || 4500;
+    snapshotFuelPrice = settingsMap["fuel_price_per_liter"] || 10000;
+    snapshotFuelConsumption = settingsMap["fuel_consumption_km_per_l"] || 10;
+    revenue = km * snapshotRatePerKm;
   } else {
     revenue = parseInt(revenueStr, 10) || 0;
   }
@@ -45,12 +51,13 @@ export async function addLedgerEntry(formData: FormData) {
       revenue,
       expenses: parseInt(expensesStr, 10) || 0,
       notes: notes || null,
+      snapshotRatePerKm,
+      snapshotFuelPrice,
+      snapshotFuelConsumption,
     });
 
-    revalidatePath("/");
     revalidatePath(`/vehicles/${vehicleId}`);
     revalidatePath("/reports");
-    revalidatePath("/drivers");
     return { success: true };
   } catch (error) {
     console.error("addLedgerEntry:", error);

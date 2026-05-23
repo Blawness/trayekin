@@ -29,7 +29,7 @@ export async function addKirRecord(formData: FormData) {
     });
 
     revalidatePath(`/vehicles/${vehicleId}`);
-    revalidatePath("/");
+    revalidatePath("/reports");
     return { success: true };
   } catch (error) {
     console.error("addKirRecord:", error);
