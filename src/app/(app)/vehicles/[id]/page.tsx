@@ -1,9 +1,9 @@
 import { getVehicle } from "@/lib/actions/vehicles";
-import { addKirRecord as addKirRecordAction } from "@/lib/actions/kir";
-import { addServiceRecord as addServiceRecordAction } from "@/lib/actions/service";
-import { addStnkRecord } from "@/lib/actions/stnk";
-import { addLedgerEntry, getLedgerEntries } from "@/lib/actions/ledger";
-import { addPartReplacement, getPartReplacements } from "@/lib/actions/parts";
+import { addKirRecord as addKirRecordAction, deleteKirRecord as deleteKirRecordAction } from "@/lib/actions/kir";
+import { addServiceRecord as addServiceRecordAction, deleteServiceRecord as deleteServiceRecordAction } from "@/lib/actions/service";
+import { addStnkRecord, deleteStnkRecord as deleteStnkRecordAction } from "@/lib/actions/stnk";
+import { addLedgerEntry, getLedgerEntries, deleteLedgerEntry as deleteLedgerEntryAction } from "@/lib/actions/ledger";
+import { addPartReplacement, getPartReplacements, deletePartReplacement as deletePartReplacementAction } from "@/lib/actions/parts";
 import { getDrivers } from "@/lib/actions/drivers";
 import { getAppSettings } from "@/lib/actions/settings";
 import {
@@ -22,6 +22,9 @@ import { LedgerFormSection } from "./_sections/ledger-form";
 import { PartFormSection } from "./_sections/part-form";
 import { LedgerHistorySection } from "./_sections/ledger-history";
 import { PartHistorySection } from "./_sections/part-history";
+import { KirHistorySection } from "./_sections/kir-history";
+import { StnkHistorySection } from "./_sections/stnk-history";
+import { ServiceHistorySection } from "./_sections/service-history";
 import { DriverAssignmentSection } from "./_sections/driver-assignment";
 import { notFound } from "next/navigation";
 
@@ -64,11 +67,35 @@ async function removeAssignment(formData: FormData) {
   return removeAssignmentAction(assignmentId);
 }
 
-const STNK_LABELS: Record<string, string> = {
-  tahunan: "Tahunan",
-  lima_tahunan: "5 Tahunan",
-  asuransi: "Asuransi",
-};
+async function deleteKir(formData: FormData) {
+  "use server";
+  const id = formData.get("id") as string;
+  return deleteKirRecordAction(id);
+}
+
+async function deleteStnk(formData: FormData) {
+  "use server";
+  const id = formData.get("id") as string;
+  return deleteStnkRecordAction(id);
+}
+
+async function deleteService(formData: FormData) {
+  "use server";
+  const id = formData.get("id") as string;
+  return deleteServiceRecordAction(id);
+}
+
+async function deleteLedger(formData: FormData) {
+  "use server";
+  const id = formData.get("id") as string;
+  return deleteLedgerEntryAction(id);
+}
+
+async function deletePart(formData: FormData) {
+  "use server";
+  const id = formData.get("id") as string;
+  return deletePartReplacementAction(id);
+}
 
 export default async function VehicleDetailPage({
   params,
@@ -206,85 +233,28 @@ export default async function VehicleDetailPage({
       <PartFormSection vehicleId={vehicle.id} action={addPart} />
 
       {/* KIR History */}
-      {vehicle.kirRecords.length > 0 && (
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-base">Riwayat KIR</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {vehicle.kirRecords.map((r) => (
-                <div key={r.id} className="flex justify-between text-sm border-b pb-2">
-                  <span>
-                    {formatDate(new Date(r.startDate))} — {formatDate(new Date(r.endDate))}
-                  </span>
-                  <Badge className={getStatusColor(getStatus(new Date(r.endDate)))}>
-                    {getStatusLabel(getStatus(new Date(r.endDate)))}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <KirHistorySection
+        records={vehicle.kirRecords}
+        deleteAction={deleteKir}
+      />
 
       {/* STNK History */}
-      {vehicle.stnkRecords && vehicle.stnkRecords.length > 0 && (
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-base">Riwayat STNK</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {vehicle.stnkRecords.map((r) => (
-                <div key={r.id} className="flex justify-between text-sm border-b pb-2">
-                  <div>
-                    <div>{STNK_LABELS[r.type] || r.type}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {formatDate(new Date(r.startDate))} — {formatDate(new Date(r.endDate))}
-                    </div>
-                  </div>
-                  <Badge className={getStatusColor(getStatus(new Date(r.endDate)))}>
-                    {getStatusLabel(getStatus(new Date(r.endDate)))}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <StnkHistorySection
+        records={vehicle.stnkRecords || []}
+        deleteAction={deleteStnk}
+      />
 
       {/* Service History */}
-      {vehicle.serviceRecords.length > 0 && (
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-base">Riwayat Servis</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {vehicle.serviceRecords.map((r) => (
-                <div key={r.id} className="flex justify-between text-sm border-b pb-2">
-                  <div>
-                    <div>{formatDate(new Date(r.serviceDate))}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {r.type} {r.notes && `— ${r.notes}`}
-                    </div>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Berikutnya: {formatDate(new Date(r.nextServiceDate))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <ServiceHistorySection
+        records={vehicle.serviceRecords}
+        deleteAction={deleteService}
+      />
 
       {/* Setoran History */}
-      <LedgerHistorySection entries={ledgerEntries} driverNameByDate={driverNameByDate} />
+      <LedgerHistorySection entries={ledgerEntries} driverNameByDate={driverNameByDate} deleteAction={deleteLedger} />
 
       {/* Parts History */}
-      <PartHistorySection parts={partList} />
+      <PartHistorySection parts={partList} deleteAction={deletePart} />
     </div>
   );
 }

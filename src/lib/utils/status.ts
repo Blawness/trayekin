@@ -42,6 +42,9 @@ export function getStatusColor(status: Status): string {
 export function addMonths(date: Date, months: number): Date {
   const result = new Date(date);
   result.setMonth(result.getMonth() + months);
+  if (result.getDate() !== date.getDate()) {
+    result.setDate(0);
+  }
   return result;
 }
 

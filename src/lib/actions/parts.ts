@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { partReplacements, vehicles } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { addMonths } from "@/lib/utils/status";
-import { eq, desc } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 
 export async function addPartReplacement(formData: FormData) {
   const session = await auth();
@@ -54,6 +54,29 @@ export async function addPartReplacement(formData: FormData) {
   } catch (error) {
     console.error("addPartReplacement:", error);
     return { error: "Gagal menyimpan data suku cadang." };
+  }
+}
+
+export async function deletePartReplacement(id: string) {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+
+  try {
+    const [record] = await db
+      .select({ id: partReplacements.id, vehicleId: partReplacements.vehicleId })
+      .from(partReplacements)
+      .innerJoin(vehicles, eq(partReplacements.vehicleId, vehicles.id))
+      .where(and(eq(partReplacements.id, id), eq(vehicles.userId, session.user.id!)));
+
+    if (!record) return { error: "Data suku cadang tidak ditemukan." };
+
+    await db.delete(partReplacements).where(eq(partReplacements.id, id));
+    revalidatePath(`/vehicles/${record.vehicleId}`);
+    revalidatePath("/reports");
+    return { success: true };
+  } catch (error) {
+    console.error("deletePartReplacement:", error);
+    return { error: "Gagal menghapus data suku cadang." };
   }
 }
 

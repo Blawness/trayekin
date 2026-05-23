@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { kirRecords, vehicles } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { addMonths } from "@/lib/utils/status";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 const KIR_MONTHS = 6;
 
@@ -44,5 +44,28 @@ export async function addKirRecord(formData: FormData) {
   } catch (error) {
     console.error("addKirRecord:", error);
     return { error: "Gagal menyimpan data KIR." };
+  }
+}
+
+export async function deleteKirRecord(id: string) {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+
+  try {
+    const [record] = await db
+      .select({ id: kirRecords.id, vehicleId: kirRecords.vehicleId })
+      .from(kirRecords)
+      .innerJoin(vehicles, eq(kirRecords.vehicleId, vehicles.id))
+      .where(and(eq(kirRecords.id, id), eq(vehicles.userId, session.user.id!)));
+
+    if (!record) return { error: "Data KIR tidak ditemukan." };
+
+    await db.delete(kirRecords).where(eq(kirRecords.id, id));
+    revalidatePath(`/vehicles/${record.vehicleId}`);
+    revalidatePath("/reports");
+    return { success: true };
+  } catch (error) {
+    console.error("deleteKirRecord:", error);
+    return { error: "Gagal menghapus data KIR." };
   }
 }

@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { stnkRecords, vehicles } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { addMonths } from "@/lib/utils/status";
-import { eq, desc } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 
 const STNK_MONTHS: Record<string, number> = {
   tahunan: 12,
@@ -51,6 +51,29 @@ export async function addStnkRecord(formData: FormData) {
   } catch (error) {
     console.error("addStnkRecord:", error);
     return { error: "Gagal menyimpan data STNK." };
+  }
+}
+
+export async function deleteStnkRecord(id: string) {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+
+  try {
+    const [record] = await db
+      .select({ id: stnkRecords.id, vehicleId: stnkRecords.vehicleId })
+      .from(stnkRecords)
+      .innerJoin(vehicles, eq(stnkRecords.vehicleId, vehicles.id))
+      .where(and(eq(stnkRecords.id, id), eq(vehicles.userId, session.user.id!)));
+
+    if (!record) return { error: "Data STNK tidak ditemukan." };
+
+    await db.delete(stnkRecords).where(eq(stnkRecords.id, id));
+    revalidatePath(`/vehicles/${record.vehicleId}`);
+    revalidatePath("/reports");
+    return { success: true };
+  } catch (error) {
+    console.error("deleteStnkRecord:", error);
+    return { error: "Gagal menghapus data STNK." };
   }
 }
 

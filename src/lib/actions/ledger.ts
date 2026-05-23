@@ -74,6 +74,29 @@ export async function addLedgerEntry(formData: FormData) {
   }
 }
 
+export async function deleteLedgerEntry(id: string) {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+
+  try {
+    const [record] = await db
+      .select({ id: dailyLedger.id, vehicleId: dailyLedger.vehicleId })
+      .from(dailyLedger)
+      .innerJoin(vehicles, eq(dailyLedger.vehicleId, vehicles.id))
+      .where(and(eq(dailyLedger.id, id), eq(vehicles.userId, session.user.id!)));
+
+    if (!record) return { error: "Setoran tidak ditemukan." };
+
+    await db.delete(dailyLedger).where(eq(dailyLedger.id, id));
+    revalidatePath(`/vehicles/${record.vehicleId}`);
+    revalidatePath("/reports");
+    return { success: true };
+  } catch (error) {
+    console.error("deleteLedgerEntry:", error);
+    return { error: "Gagal menghapus setoran." };
+  }
+}
+
 export async function getLedgerEntries(vehicleId: string) {
   const session = await auth();
   if (!session?.user) return [];

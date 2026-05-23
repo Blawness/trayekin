@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { serviceRecords, vehicles } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { addMonths } from "@/lib/utils/status";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 const SERVICE_MONTHS = 3;
 
@@ -48,5 +48,28 @@ export async function addServiceRecord(formData: FormData) {
   } catch (error) {
     console.error("addServiceRecord:", error);
     return { error: "Gagal menyimpan data servis." };
+  }
+}
+
+export async function deleteServiceRecord(id: string) {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+
+  try {
+    const [record] = await db
+      .select({ id: serviceRecords.id, vehicleId: serviceRecords.vehicleId })
+      .from(serviceRecords)
+      .innerJoin(vehicles, eq(serviceRecords.vehicleId, vehicles.id))
+      .where(and(eq(serviceRecords.id, id), eq(vehicles.userId, session.user.id!)));
+
+    if (!record) return { error: "Data servis tidak ditemukan." };
+
+    await db.delete(serviceRecords).where(eq(serviceRecords.id, id));
+    revalidatePath(`/vehicles/${record.vehicleId}`);
+    revalidatePath("/reports");
+    return { success: true };
+  } catch (error) {
+    console.error("deleteServiceRecord:", error);
+    return { error: "Gagal menghapus data servis." };
   }
 }
