@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { dailyLedger, appSettings } from "@/lib/db/schema";
+import { dailyLedger, appSettings, vehicles } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { eq, desc, sql, and, gte } from "drizzle-orm";
 
@@ -21,6 +21,15 @@ export async function addLedgerEntry(formData: FormData) {
   const notes = formData.get("notes") as string;
 
   if (!vehicleId || !dateStr) return { error: "Data tidak lengkap." };
+
+  const [vehicle] = await db
+    .select({ userId: vehicles.userId })
+    .from(vehicles)
+    .where(eq(vehicles.id, vehicleId))
+    .limit(1);
+
+  if (!vehicle) return { error: "Kendaraan tidak ditemukan." };
+  if (vehicle.userId !== session.user.id) throw new Error("Unauthorized");
 
   const km = kmStr ? parseInt(kmStr, 10) : null;
 

@@ -2,9 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { serviceRecords } from "@/lib/db/schema";
+import { serviceRecords, vehicles } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { addMonths } from "@/lib/utils/status";
+import { eq } from "drizzle-orm";
 
 const SERVICE_MONTHS = 3;
 
@@ -20,6 +21,15 @@ export async function addServiceRecord(formData: FormData) {
   if (!vehicleId || !serviceDateStr) {
     return { error: "Data tidak lengkap." };
   }
+
+  const [vehicle] = await db
+    .select({ userId: vehicles.userId })
+    .from(vehicles)
+    .where(eq(vehicles.id, vehicleId))
+    .limit(1);
+
+  if (!vehicle) return { error: "Kendaraan tidak ditemukan." };
+  if (vehicle.userId !== session.user.id) throw new Error("Unauthorized");
 
   const serviceDate = new Date(serviceDateStr);
 

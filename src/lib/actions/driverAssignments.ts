@@ -18,6 +18,15 @@ export async function assignDriver(
     return { error: "Data tidak lengkap." };
   }
 
+  const [vehicle] = await db
+    .select({ userId: vehicles.userId })
+    .from(vehicles)
+    .where(eq(vehicles.id, vehicleId))
+    .limit(1);
+
+  if (!vehicle) return { error: "Kendaraan tidak ditemukan." };
+  if (vehicle.userId !== session.user.id) throw new Error("Unauthorized");
+
   try {
     await db.insert(driverAssignments).values({
       driverId,
