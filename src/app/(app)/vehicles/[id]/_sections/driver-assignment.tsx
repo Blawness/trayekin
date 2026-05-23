@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/toast";
 import type { getDrivers } from "@/lib/actions/drivers";
 import type { getAssignmentsForVehicle } from "@/lib/actions/driverAssignments";
 import { X } from "lucide-react";
@@ -16,8 +17,8 @@ type Props = {
   vehicleId: string;
   drivers: Driver[];
   assignments: Assignment[];
-  assignAction: (formData: FormData) => void;
-  removeAction: (formData: FormData) => void;
+  assignAction: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
+  removeAction: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
 };
 
 export function DriverAssignmentSection({
@@ -29,6 +30,39 @@ export function DriverAssignmentSection({
 }: Props) {
   const [selectedDriver, setSelectedDriver] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  async function handleAssign(formData: FormData) {
+    setLoading(true);
+    setError("");
+    const result = await assignAction(formData);
+    if (result?.error) {
+      setError(result.error);
+      toast(result.error, "error");
+    } else {
+      toast("Sopir berhasil ditugaskan.", "success");
+      setSelectedDriver("");
+      setSelectedDate("");
+      const form = document.getElementById("assign-form") as HTMLFormElement;
+      form?.reset();
+    }
+    setLoading(false);
+  }
+
+  async function handleRemove(formData: FormData) {
+    const assignmentId = formData.get("assignmentId") as string;
+    setRemovingId(assignmentId);
+    const result = await removeAction(formData);
+    if (result?.error) {
+      toast(result.error, "error");
+    } else {
+      toast("Penugasan berhasil dihapus.", "success");
+    }
+    setRemovingId(null);
+  }
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -36,40 +70,43 @@ export function DriverAssignmentSection({
         <CardTitle className="text-base">Penugasan Sopir</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <form action={assignAction} className="flex gap-2 items-end">
+        <form id="assign-form" action={handleAssign} className="space-y-2">
           <input type="hidden" name="vehicleId" value={vehicleId} />
-          <div className="flex-1 space-y-2">
-            <Label htmlFor="assignDriver">Sopir</Label>
-            <select
-              id="assignDriver"
-              name="driverId"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              value={selectedDriver}
-              onChange={(e) => setSelectedDriver(e.target.value)}
-              required
-            >
-              <option value="">-- Pilih sopir --</option>
-              {drivers.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
+          {error && <p className="text-sm text-red-500">{error}</p>}
+          <div className="flex gap-2 items-end">
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="assignDriver">Sopir</Label>
+              <select
+                id="assignDriver"
+                name="driverId"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                value={selectedDriver}
+                onChange={(e) => setSelectedDriver(e.target.value)}
+                required
+              >
+                <option value="">-- Pilih sopir --</option>
+                {drivers.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="assignDate">Tanggal</Label>
+              <Input
+                id="assignDate"
+                name="date"
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                required
+              />
+            </div>
+            <Button type="submit" size="sm" disabled={loading}>
+              {loading ? "Menyimpan..." : "Assign"}
+            </Button>
           </div>
-          <div className="flex-1 space-y-2">
-            <Label htmlFor="assignDate">Tanggal</Label>
-            <Input
-              id="assignDate"
-              name="date"
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              required
-            />
-          </div>
-          <Button type="submit" size="sm">
-            Assign
-          </Button>
         </form>
 
         {assignments.length > 0 && (
@@ -93,7 +130,7 @@ export function DriverAssignmentSection({
                     })}
                   </span>
                 </div>
-                <form action={removeAction}>
+                <form action={handleRemove}>
                   <input type="hidden" name="assignmentId" value={a.id} />
                   <input type="hidden" name="vehicleId" value={vehicleId} />
                   <Button
@@ -101,8 +138,13 @@ export function DriverAssignmentSection({
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    disabled={removingId === a.id}
                   >
-                    <X className="h-4 w-4" />
+                    {removingId === a.id ? (
+                      <span className="text-xs">...</span>
+                    ) : (
+                      <X className="h-4 w-4" />
+                    )}
                   </Button>
                 </form>
               </div>

@@ -14,10 +14,10 @@ import {
 import { getStatus, getStatusLabel, getStatusColor, formatDate, ROLLING_WINDOW_DAYS } from "@/lib/utils/status";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { RefreshButton } from "@/components/refresh-button";
+import { KirFormSection } from "./_sections/kir-form";
+import { StnkFormSection } from "./_sections/stnk-form";
+import { ServiceFormSection } from "./_sections/service-form";
 import { LedgerFormSection } from "./_sections/ledger-form";
 import { PartFormSection } from "./_sections/part-form";
 import { LedgerHistorySection } from "./_sections/ledger-history";
@@ -27,27 +27,27 @@ import { notFound } from "next/navigation";
 
 async function addKirRecord(formData: FormData) {
   "use server";
-  await addKirRecordAction(formData);
+  return addKirRecordAction(formData);
 }
 
 async function addServiceRecord(formData: FormData) {
   "use server";
-  await addServiceRecordAction(formData);
+  return addServiceRecordAction(formData);
 }
 
 async function addStnk(formData: FormData) {
   "use server";
-  await addStnkRecord(formData);
+  return addStnkRecord(formData);
 }
 
 async function addLedger(formData: FormData) {
   "use server";
-  await addLedgerEntry(formData);
+  return addLedgerEntry(formData);
 }
 
 async function addPart(formData: FormData) {
   "use server";
-  await addPartReplacement(formData);
+  return addPartReplacement(formData);
 }
 
 async function assignDriver(formData: FormData) {
@@ -55,13 +55,13 @@ async function assignDriver(formData: FormData) {
   const driverId = formData.get("driverId") as string;
   const vehicleId = formData.get("vehicleId") as string;
   const date = formData.get("date") as string;
-  await assignDriverAction(driverId, vehicleId, date);
+  return assignDriverAction(driverId, vehicleId, date);
 }
 
 async function removeAssignment(formData: FormData) {
   "use server";
   const assignmentId = formData.get("assignmentId") as string;
-  await removeAssignmentAction(assignmentId);
+  return removeAssignmentAction(assignmentId);
 }
 
 const STNK_LABELS: Record<string, string> = {
@@ -191,85 +191,13 @@ export default async function VehicleDetailPage({
       />
 
       {/* KIR Form */}
-      <Card className="hover:shadow-md transition-shadow">
-        <CardHeader>
-          <CardTitle className="text-base">Catat KIR Baru</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form action={addKirRecord} className="flex gap-2 items-end">
-            <input type="hidden" name="vehicleId" value={vehicle.id} />
-            <div className="flex-1 space-y-2">
-              <Label htmlFor="startDate">Tanggal Mulai KIR</Label>
-              <Input id="startDate" name="startDate" type="date" required />
-            </div>
-            <Button type="submit" size="sm">Simpan</Button>
-          </form>
-        </CardContent>
-      </Card>
+      <KirFormSection vehicleId={vehicle.id} action={addKirRecord} />
 
       {/* STNK Form */}
-      <Card className="hover:shadow-md transition-shadow">
-        <CardHeader>
-          <CardTitle className="text-base">Catat STNK / Asuransi</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form action={addStnk} className="space-y-3">
-            <input type="hidden" name="vehicleId" value={vehicle.id} />
-            <div className="space-y-2">
-              <Label htmlFor="stnkType">Jenis</Label>
-              <select
-                id="stnkType"
-                name="stnkType"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <option value="tahunan">Pajak Tahunan</option>
-                <option value="lima_tahunan">Pajak 5 Tahunan</option>
-                <option value="asuransi">Asuransi</option>
-              </select>
-            </div>
-            <div className="flex gap-2 items-end">
-              <div className="flex-1 space-y-2">
-                <Label htmlFor="stnkStartDate">Tanggal Mulai</Label>
-                <Input id="stnkStartDate" name="startDate" type="date" required />
-              </div>
-              <Button type="submit" size="sm">Simpan</Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      <StnkFormSection vehicleId={vehicle.id} action={addStnk} />
 
       {/* Service Form */}
-      <Card className="hover:shadow-md transition-shadow">
-        <CardHeader>
-          <CardTitle className="text-base">Catat Servis Baru</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form action={addServiceRecord} className="space-y-3">
-            <input type="hidden" name="vehicleId" value={vehicle.id} />
-            <div className="space-y-2">
-              <Label htmlFor="serviceDate">Tanggal Servis</Label>
-              <Input id="serviceDate" name="serviceDate" type="date" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="type">Jenis Servis</Label>
-              <select
-                id="type"
-                name="type"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <option value="rutin">Rutin</option>
-                <option value="besar">Besar</option>
-                <option value="lainnya">Lainnya</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="notes">Catatan</Label>
-              <Input id="notes" name="notes" placeholder="Ganti oli, rem, dll." />
-            </div>
-            <Button type="submit" size="sm">Simpan</Button>
-          </form>
-        </CardContent>
-      </Card>
+      <ServiceFormSection vehicleId={vehicle.id} action={addServiceRecord} />
 
       {/* Setoran Harian */}
       <LedgerFormSection vehicleId={vehicle.id} drivers={driverList} action={addLedger} ratePerKm={ratePerKm} />

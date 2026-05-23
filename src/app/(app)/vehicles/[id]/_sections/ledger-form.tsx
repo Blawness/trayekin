@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/toast";
 import type { getDrivers } from "@/lib/actions/drivers";
 
 type Driver = Awaited<ReturnType<typeof getDrivers>>[number];
@@ -12,14 +13,36 @@ type Driver = Awaited<ReturnType<typeof getDrivers>>[number];
 type Props = {
   vehicleId: string;
   drivers: Driver[];
-  action: (formData: FormData) => void;
+  action: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
   ratePerKm: number;
 };
 
 export function LedgerFormSection({ vehicleId, drivers, action, ratePerKm }: Props) {
   const [km, setKm] = useState("");
   const [manualRevenue, setManualRevenue] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
   const autoRevenue = km ? parseInt(km, 10) * ratePerKm : null;
+
+  async function handleSubmit(formData: FormData) {
+    setLoading(true);
+    setError("");
+    formData.set("km", km);
+    formData.set("revenue", String(autoRevenue ?? manualRevenue));
+    const result = await action(formData);
+    if (result?.error) {
+      setError(result.error);
+      toast(result.error, "error");
+    } else {
+      toast("Setoran berhasil disimpan.", "success");
+      setKm("");
+      setManualRevenue("");
+      const form = document.getElementById("ledger-form") as HTMLFormElement;
+      form?.reset();
+    }
+    setLoading(false);
+  }
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -27,10 +50,9 @@ export function LedgerFormSection({ vehicleId, drivers, action, ratePerKm }: Pro
         <CardTitle className="text-base">Catat Setoran Harian</CardTitle>
       </CardHeader>
       <CardContent>
-        <form action={action} className="space-y-3">
+        <form id="ledger-form" action={handleSubmit} className="space-y-3">
           <input type="hidden" name="vehicleId" value={vehicleId} />
-          <input type="hidden" name="km" value={km} />
-          <input type="hidden" name="revenue" value={autoRevenue ?? manualRevenue} />
+          {error && <p className="text-sm text-red-500">{error}</p>}
           <div className="space-y-2">
             <Label htmlFor="ledgerDate">Tanggal</Label>
             <Input id="ledgerDate" name="date" type="date" required />
@@ -86,8 +108,8 @@ export function LedgerFormSection({ vehicleId, drivers, action, ratePerKm }: Pro
             <Label htmlFor="ledgerNotes">Catatan</Label>
             <Input id="ledgerNotes" name="notes" placeholder="Supir, BBM, parkir..." />
           </div>
-          <Button type="submit" size="sm">
-            Simpan
+          <Button type="submit" size="sm" disabled={loading}>
+            {loading ? "Menyimpan..." : "Simpan"}
           </Button>
         </form>
       </CardContent>
