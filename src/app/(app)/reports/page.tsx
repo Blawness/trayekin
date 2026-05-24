@@ -2,6 +2,8 @@ import { getProfitabilityReport } from "@/lib/actions/profitability";
 import { getDriverSummaries } from "@/lib/actions/driverAssignments";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { BarChart3 } from "lucide-react";
 import Link from "next/link";
 
 type SortKey = "plate" | "revenue" | "totalCost" | "netProfit" | "marginPercent";
@@ -64,180 +66,191 @@ export default async function ReportsPage({
 
   if (rows.length === 0) {
     return (
-      <div className="text-center py-20 text-muted-foreground">
-        <p className="font-medium">Belum ada data kendaraan.</p>
-        <p className="text-sm">Tambah kendaraan untuk melihat laporan.</p>
-      </div>
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col items-center py-16 text-muted-foreground">
+          <div className="size-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+            <BarChart3 className="size-8 text-muted-foreground/50" />
+          </div>
+          <p className="font-semibold">Belum ada data kendaraan.</p>
+          <p className="text-sm">Tambah kendaraan untuk melihat laporan.</p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-bold">Laporan Profitabilitas</h1>
+    <div className="space-y-5">
+      <h1 className="text-xl font-bold tracking-tight">Laporan Profitabilitas</h1>
 
-      {/* Period Selector */}
-      <div className="flex gap-2">
+      <div className="flex gap-1.5">
         {periods.map((p) => (
           <Link
             key={p.value}
             href={`/reports?period=${p.value}&sort=${sortKey}&dir=${sortDir}`}
-            className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+            className={cn(
+              "px-3.5 py-1.5 text-sm rounded-lg border transition-colors font-medium",
               period === p.value
                 ? "bg-primary text-primary-foreground border-primary"
-                : "bg-background hover:bg-muted"
-            }`}
+                : "bg-card hover:bg-muted border-border"
+            )}
           >
             {p.label}
           </Link>
         ))}
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-3 gap-3">
-        <Card className="hover:shadow-md transition-shadow">
+        <Card size="sm" className="relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-emerald-500" />
           <CardContent className="p-4 text-center">
-            <div className="text-xs text-muted-foreground">Total Pendapatan</div>
-            <div className="text-xl font-bold text-green-600 mt-1">
+            <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Pendapatan</div>
+            <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-1 tabular-nums">
               Rp {totalRevenue.toLocaleString("id-ID")}
             </div>
           </CardContent>
         </Card>
-        <Card className="hover:shadow-md transition-shadow">
+        <Card size="sm" className="relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-red-500" />
           <CardContent className="p-4 text-center">
-            <div className="text-xs text-muted-foreground">Total Biaya</div>
-            <div className="text-xl font-bold text-red-600 mt-1">
+            <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Biaya</div>
+            <div className="text-lg font-bold text-red-600 dark:text-red-400 mt-1 tabular-nums">
               Rp {totalCost.toLocaleString("id-ID")}
             </div>
           </CardContent>
         </Card>
-        <Card className="hover:shadow-md transition-shadow">
+        <Card size="sm" className="relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500" />
           <CardContent className="p-4 text-center">
-            <div className="text-xs text-muted-foreground">Fleet Margin</div>
-            <div className={`text-xl font-bold mt-1 ${fleetMargin >= 0 ? "text-blue-600" : "text-red-600"}`}>
+            <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Margin</div>
+            <div className={cn("text-lg font-bold mt-1 tabular-nums", fleetMargin >= 0 ? "text-blue-600 dark:text-blue-400" : "text-red-600")}>
               {fleetMargin.toFixed(1)}%
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Per-Vehicle Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b text-left text-muted-foreground">
-              <th className="pb-2 pr-2">
-                <Link href={sortUrl("plate")} className="hover:text-foreground">
-                  Plat {sortIndicator("plate")}
-                </Link>
-              </th>
-              <th className="pb-2 pr-2 text-right">KM</th>
-              <th className="pb-2 pr-2 text-right">
-                <Link href={sortUrl("revenue")} className="hover:text-foreground">
-                  Pendapatan {sortIndicator("revenue")}
-                </Link>
-              </th>
-              <th className="pb-2 pr-2 text-right">Service</th>
-              <th className="pb-2 pr-2 text-right">Parts</th>
-              <th className="pb-2 pr-2 text-right">KIR</th>
-              <th className="pb-2 pr-2 text-right">STNK</th>
-              <th className="pb-2 pr-2 text-right">BBM</th>
-              <th className="pb-2 pr-2 text-right">
-                <Link href={sortUrl("totalCost")} className="hover:text-foreground">
-                  Total Biaya {sortIndicator("totalCost")}
-                </Link>
-              </th>
-              <th className="pb-2 pr-2 text-right">
-                <Link href={sortUrl("netProfit")} className="hover:text-foreground">
-                  Bersih {sortIndicator("netProfit")}
-                </Link>
-              </th>
-              <th className="pb-2 text-right">
-                <Link href={sortUrl("marginPercent")} className="hover:text-foreground">
-                  Margin {sortIndicator("marginPercent")}
-                </Link>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.map((r) => (
-              <tr key={r.vehicleId} className="border-b last:border-0">
-                <td className="py-2 pr-2 font-medium">
-                  <Link href={`/vehicles/${r.vehicleId}`} className="hover:underline">
-                    {r.plate}
+      <Card size="sm" className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b text-left text-muted-foreground bg-muted/50">
+                <th className="py-2.5 pl-4 pr-2 font-medium text-xs uppercase tracking-wider">
+                  <Link href={sortUrl("plate")} className="hover:text-foreground transition-colors">
+                    Plat {sortIndicator("plate")}
                   </Link>
-                </td>
-                <td className="py-2 pr-2 text-right">{r.totalKm || "-"}</td>
-                <td className="py-2 pr-2 text-right text-green-600">
-                  {r.revenue > 0 ? `Rp ${r.revenue.toLocaleString("id-ID")}` : "-"}
-                </td>
-                <td className="py-2 pr-2 text-right">
-                  {r.costService > 0 ? `Rp ${r.costService.toLocaleString("id-ID")}` : "-"}
-                </td>
-                <td className="py-2 pr-2 text-right">
-                  {r.costParts > 0 ? `Rp ${r.costParts.toLocaleString("id-ID")}` : "-"}
-                </td>
-                <td className="py-2 pr-2 text-right">
-                  {r.costKir > 0 ? `Rp ${r.costKir.toLocaleString("id-ID")}` : "-"}
-                </td>
-                <td className="py-2 pr-2 text-right">
-                  {r.costStnk > 0 ? `Rp ${r.costStnk.toLocaleString("id-ID")}` : "-"}
-                </td>
-                <td className="py-2 pr-2 text-right">
-                  {r.costFuel > 0 ? `Rp ${r.costFuel.toLocaleString("id-ID")}` : "-"}
-                </td>
-                <td className="py-2 pr-2 text-right text-red-600">
-                  Rp {r.totalCost.toLocaleString("id-ID")}
-                </td>
-                <td className="py-2 pr-2 text-right">
-                  <span className={r.netProfit >= 0 ? "text-blue-600" : "text-red-600"}>
-                    Rp {r.netProfit.toLocaleString("id-ID")}
-                  </span>
-                </td>
-                <td className="py-2 text-right">
-                  <Badge className={r.marginPercent >= 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}>
-                    {r.marginPercent.toFixed(1)}%
-                  </Badge>
-                </td>
+                </th>
+                <th className="py-2.5 pr-2 font-medium text-xs uppercase tracking-wider text-right">KM</th>
+                <th className="py-2.5 pr-2 font-medium text-xs uppercase tracking-wider text-right">
+                  <Link href={sortUrl("revenue")} className="hover:text-foreground transition-colors">
+                    Pendapatan {sortIndicator("revenue")}
+                  </Link>
+                </th>
+                <th className="py-2.5 pr-2 font-medium text-xs uppercase tracking-wider text-right">Service</th>
+                <th className="py-2.5 pr-2 font-medium text-xs uppercase tracking-wider text-right">Parts</th>
+                <th className="py-2.5 pr-2 font-medium text-xs uppercase tracking-wider text-right">KIR</th>
+                <th className="py-2.5 pr-2 font-medium text-xs uppercase tracking-wider text-right">STNK</th>
+                <th className="py-2.5 pr-2 font-medium text-xs uppercase tracking-wider text-right">BBM</th>
+                <th className="py-2.5 pr-2 font-medium text-xs uppercase tracking-wider text-right">
+                  <Link href={sortUrl("totalCost")} className="hover:text-foreground transition-colors">
+                    Biaya {sortIndicator("totalCost")}
+                  </Link>
+                </th>
+                <th className="py-2.5 pr-2 font-medium text-xs uppercase tracking-wider text-right">
+                  <Link href={sortUrl("netProfit")} className="hover:text-foreground transition-colors">
+                    Bersih {sortIndicator("netProfit")}
+                  </Link>
+                </th>
+                <th className="py-2.5 pr-4 font-medium text-xs uppercase tracking-wider text-right">
+                  <Link href={sortUrl("marginPercent")} className="hover:text-foreground transition-colors">
+                    Margin {sortIndicator("marginPercent")}
+                  </Link>
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {sorted.map((r) => (
+                <tr key={r.vehicleId} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                  <td className="py-2.5 pl-4 pr-2 font-medium">
+                    <Link href={`/vehicles/${r.vehicleId}`} className="hover:underline text-primary">
+                      {r.plate}
+                    </Link>
+                  </td>
+                  <td className="py-2.5 pr-2 text-right tabular-nums">{r.totalKm || "-"}</td>
+                  <td className="py-2.5 pr-2 text-right text-emerald-600 dark:text-emerald-400 tabular-nums">
+                    {r.revenue > 0 ? `Rp ${r.revenue.toLocaleString("id-ID")}` : "-"}
+                  </td>
+                  <td className="py-2.5 pr-2 text-right tabular-nums">
+                    {r.costService > 0 ? `Rp ${r.costService.toLocaleString("id-ID")}` : "-"}
+                  </td>
+                  <td className="py-2.5 pr-2 text-right tabular-nums">
+                    {r.costParts > 0 ? `Rp ${r.costParts.toLocaleString("id-ID")}` : "-"}
+                  </td>
+                  <td className="py-2.5 pr-2 text-right tabular-nums">
+                    {r.costKir > 0 ? `Rp ${r.costKir.toLocaleString("id-ID")}` : "-"}
+                  </td>
+                  <td className="py-2.5 pr-2 text-right tabular-nums">
+                    {r.costStnk > 0 ? `Rp ${r.costStnk.toLocaleString("id-ID")}` : "-"}
+                  </td>
+                  <td className="py-2.5 pr-2 text-right tabular-nums">
+                    {r.costFuel > 0 ? `Rp ${r.costFuel.toLocaleString("id-ID")}` : "-"}
+                  </td>
+                  <td className="py-2.5 pr-2 text-right text-red-600 dark:text-red-400 tabular-nums">
+                    Rp {r.totalCost.toLocaleString("id-ID")}
+                  </td>
+                  <td className="py-2.5 pr-2 text-right tabular-nums">
+                    <span className={r.netProfit >= 0 ? "text-blue-600 dark:text-blue-400" : "text-red-600"}>
+                      Rp {r.netProfit.toLocaleString("id-ID")}
+                    </span>
+                  </td>
+                  <td className="py-2.5 pr-4 text-right">
+                    <Badge className={cn("text-[10px]", r.marginPercent >= 0 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300")}>
+                      {r.marginPercent.toFixed(1)}%
+                    </Badge>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
       {sorted.length === 0 && (
-        <div className="text-center py-8 text-muted-foreground">
-          <p>Tidak ada aktivitas dalam periode ini.</p>
-        </div>
+        <Card size="sm">
+          <CardContent className="py-8 text-center text-muted-foreground">
+            <p className="text-sm">Tidak ada aktivitas dalam periode ini.</p>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Ringkasan Per Sopir */}
       {driverSummaries.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-lg font-bold">Ringkasan Per Sopir</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-left text-muted-foreground">
-                  <th className="pb-2 pr-2">Sopir</th>
-                  <th className="pb-2 pr-2 text-right">Total KM</th>
-                  <th className="pb-2 pr-2 text-right">Hari Bertugas</th>
-                  <th className="pb-2 text-right">Rata-rata Pendapatan/Hari</th>
-                </tr>
-              </thead>
-              <tbody>
-                {driverSummaries.map((d) => (
-                  <tr key={d.driverId} className="border-b last:border-0">
-                    <td className="py-2 pr-2 font-medium">{d.driverName}</td>
-                    <td className="py-2 pr-2 text-right">{d.totalKm || "-"}</td>
-                    <td className="py-2 pr-2 text-right">{d.totalDays}</td>
-                    <td className="py-2 text-right text-green-600">
-                      Rp {d.avgDailyRevenue.toLocaleString("id-ID")}
-                    </td>
+          <h2 className="text-base font-bold tracking-tight">Ringkasan Per Sopir</h2>
+          <Card size="sm" className="overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-muted-foreground bg-muted/50">
+                    <th className="py-2.5 pl-4 pr-2 font-medium text-xs uppercase tracking-wider">Sopir</th>
+                    <th className="py-2.5 pr-2 font-medium text-xs uppercase tracking-wider text-right">Total KM</th>
+                    <th className="py-2.5 pr-2 font-medium text-xs uppercase tracking-wider text-right">Hari</th>
+                    <th className="py-2.5 pr-4 font-medium text-xs uppercase tracking-wider text-right">Rata2/Hari</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {driverSummaries.map((d) => (
+                    <tr key={d.driverId} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                      <td className="py-2.5 pl-4 pr-2 font-medium">{d.driverName}</td>
+                      <td className="py-2.5 pr-2 text-right tabular-nums">{d.totalKm || "-"}</td>
+                      <td className="py-2.5 pr-2 text-right tabular-nums">{d.totalDays}</td>
+                      <td className="py-2.5 pr-4 text-right text-emerald-600 dark:text-emerald-400 tabular-nums">
+                        Rp {d.avgDailyRevenue.toLocaleString("id-ID")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
         </div>
       )}
     </div>

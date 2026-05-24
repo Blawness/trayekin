@@ -42,8 +42,8 @@ export function DriverForm({
   }
 
   return (
-    <form action={handleSubmit} className="space-y-6">
-      <Card>
+    <form action={handleSubmit} className="space-y-5">
+      <Card size="sm">
         <CardHeader>
           <CardTitle>
             {mode === "create" ? "Tambah Sopir" : "Edit Sopir"}
@@ -99,7 +99,7 @@ export function DriverForm({
         </CardContent>
       </Card>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-destructive font-medium">{error}</p>}
 
       <Button type="submit" className="w-full" disabled={loading}>
         {loading

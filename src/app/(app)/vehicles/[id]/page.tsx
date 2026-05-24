@@ -12,6 +12,7 @@ import {
   getAssignmentsForVehicle,
 } from "@/lib/actions/driverAssignments";
 import { getStatus, getStatusLabel, getStatusColor, formatDate, ROLLING_WINDOW_DAYS } from "@/lib/utils/status";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RefreshButton } from "@/components/refresh-button";
@@ -141,36 +142,35 @@ export default async function VehicleDetailPage({
   const totalExpenses = recentLedger.reduce((s, e) => s + e.expenses, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="sr-only">Detail Kendaraan</h1>
         <RefreshButton />
       </div>
 
-      {/* Vehicle Info */}
-      <Card className="hover:shadow-md transition-shadow">
+      <Card size="sm">
         <CardHeader>
-          <CardTitle className="text-2xl">{vehicle.plate}</CardTitle>
+          <CardTitle className="text-2xl tracking-tight">{vehicle.plate}</CardTitle>
           {vehicle.name && (
-            <p className="text-muted-foreground">{vehicle.name}</p>
+            <p className="text-muted-foreground text-sm">{vehicle.name}</p>
           )}
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           {kirStatus && (
-            <Badge className={getStatusColor(kirStatus)}>
+            <Badge className={cn("text-xs", getStatusColor(kirStatus))}>
               KIR: {getStatusLabel(kirStatus)}{" "}
               {latestKir && `(${formatDate(new Date(latestKir.endDate))})`}
             </Badge>
           )}
           {serviceStatus && (
-            <Badge className={getStatusColor(serviceStatus)}>
+            <Badge className={cn("text-xs", getStatusColor(serviceStatus))}>
               Servis: {getStatusLabel(serviceStatus)}{" "}
               {latestService &&
                 `(${formatDate(new Date(latestService.nextServiceDate))})`}
             </Badge>
           )}
           {stnkStatus && (
-            <Badge className={getStatusColor(stnkStatus)}>
+            <Badge className={cn("text-xs", getStatusColor(stnkStatus))}>
               STNK: {getStatusLabel(stnkStatus)}{" "}
               {latestStnk && `(${formatDate(new Date(latestStnk.endDate))})`}
             </Badge>
@@ -178,29 +178,31 @@ export default async function VehicleDetailPage({
         </CardContent>
       </Card>
 
-      {/* Setoran Ringkasan */}
       {ledgerEntries.length > 0 && (
         <div className="grid grid-cols-3 gap-3">
-          <Card className="hover:shadow-md transition-shadow">
+          <Card size="sm" className="relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-0.5 bg-emerald-500" />
             <CardContent className="p-3 text-center">
-              <div className="text-xs text-muted-foreground">Pendapatan 30 Hari</div>
-              <div className="text-lg font-bold text-green-600">
+              <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Pendapatan 30 Hari</div>
+              <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 tabular-nums">
                 Rp {totalRevenue.toLocaleString("id-ID")}
               </div>
             </CardContent>
           </Card>
-          <Card className="hover:shadow-md transition-shadow">
+          <Card size="sm" className="relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-0.5 bg-red-500" />
             <CardContent className="p-3 text-center">
-              <div className="text-xs text-muted-foreground">Pengeluaran</div>
-              <div className="text-lg font-bold text-red-600">
+              <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Pengeluaran</div>
+              <div className="text-lg font-bold text-red-600 dark:text-red-400 mt-0.5 tabular-nums">
                 Rp {totalExpenses.toLocaleString("id-ID")}
               </div>
             </CardContent>
           </Card>
-          <Card className="hover:shadow-md transition-shadow">
+          <Card size="sm" className="relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500" />
             <CardContent className="p-3 text-center">
-              <div className="text-xs text-muted-foreground">Bersih</div>
-              <div className={`text-lg font-bold ${totalRevenue - totalExpenses >= 0 ? "text-blue-600" : "text-red-600"}`}>
+              <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Bersih</div>
+              <div className={cn("text-lg font-bold mt-0.5 tabular-nums", totalRevenue - totalExpenses >= 0 ? "text-blue-600 dark:text-blue-400" : "text-red-600")}>
                 Rp {(totalRevenue - totalExpenses).toLocaleString("id-ID")}
               </div>
             </CardContent>
@@ -208,7 +210,6 @@ export default async function VehicleDetailPage({
         </div>
       )}
 
-      {/* Penugasan Sopir */}
       <DriverAssignmentSection
         vehicleId={vehicle.id}
         drivers={driverList}
@@ -217,43 +218,33 @@ export default async function VehicleDetailPage({
         removeAction={removeAssignment}
       />
 
-      {/* KIR Form */}
       <KirFormSection vehicleId={vehicle.id} action={addKirRecord} />
 
-      {/* STNK Form */}
       <StnkFormSection vehicleId={vehicle.id} action={addStnk} />
 
-      {/* Service Form */}
       <ServiceFormSection vehicleId={vehicle.id} action={addServiceRecord} />
 
-      {/* Setoran Harian */}
       <LedgerFormSection vehicleId={vehicle.id} drivers={driverList} action={addLedger} ratePerKm={ratePerKm} />
 
-      {/* Ganti Suku Cadang */}
       <PartFormSection vehicleId={vehicle.id} action={addPart} />
 
-      {/* KIR History */}
       <KirHistorySection
         records={vehicle.kirRecords}
         deleteAction={deleteKir}
       />
 
-      {/* STNK History */}
       <StnkHistorySection
         records={vehicle.stnkRecords || []}
         deleteAction={deleteStnk}
       />
 
-      {/* Service History */}
       <ServiceHistorySection
         records={vehicle.serviceRecords}
         deleteAction={deleteService}
       />
 
-      {/* Setoran History */}
       <LedgerHistorySection entries={ledgerEntries} driverNameByDate={driverNameByDate} deleteAction={deleteLedger} />
 
-      {/* Parts History */}
       <PartHistorySection parts={partList} deleteAction={deletePart} />
     </div>
   );

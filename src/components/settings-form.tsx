@@ -27,17 +27,17 @@ export function SettingsForm({ ratePerKm, fuelPrice, fuelConsumption }: Props) {
   }
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card size="sm">
       <CardHeader>
-        <CardTitle className="text-base">Biaya Transjakarta</CardTitle>
+        <CardTitle className="text-base">Biaya Operasional</CardTitle>
       </CardHeader>
       <CardContent>
         <form action={handleSubmit} className="space-y-4">
           {status === "success" && (
-            <div className="text-sm text-green-600">Pengaturan berhasil disimpan.</div>
+            <div className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Pengaturan berhasil disimpan.</div>
           )}
           {status === "error" && (
-            <div className="text-sm text-red-600">Gagal menyimpan pengaturan.</div>
+            <div className="text-sm text-destructive font-medium">Gagal menyimpan pengaturan.</div>
           )}
           <div className="space-y-2">
             <Label htmlFor="rate_per_km">Tarif per KM (Rp)</Label>

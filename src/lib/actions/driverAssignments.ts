@@ -166,10 +166,6 @@ export async function getDriverSummaries(
       )
       .limit(500);
 
-    const driverMap = Object.fromEntries(
-      allDrivers.map((d) => [d.id, d.name])
-    );
-
     const ledgerMap: Record<string, typeof allLedger> = {};
     for (const entry of allLedger) {
       const key = `${entry.vehicleId}_${entry.date}`;

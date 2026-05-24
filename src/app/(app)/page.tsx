@@ -17,7 +17,7 @@ export default async function DashboardPage() {
   if (!latestLog) {
     showCronWarning = true;
   } else {
-    const hoursSince = (Date.now() - latestLog.runAt.getTime()) / (1000 * 60 * 60);
+    const hoursSince = (new Date().getTime() - latestLog.runAt.getTime()) / (1000 * 60 * 60);
     if (latestLog.status === "failed" || hoursSince > 25) {
       showCronWarning = true;
     }

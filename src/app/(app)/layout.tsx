@@ -15,15 +15,15 @@ export default async function AppLayout({
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b bg-background">
-        <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4">
-          <Link href="/" className="font-bold text-lg">
+      <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
+        <div className="mx-auto flex h-12 max-w-2xl items-center justify-between px-4">
+          <Link href="/" className="font-bold text-lg tracking-tight text-primary">
             Trayekin
           </Link>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <ThemeToggle />
             <NotificationBell />
-            <span className="text-sm text-muted-foreground max-w-[100px] truncate">
+            <span className="text-xs text-muted-foreground max-w-[80px] truncate hidden sm:block">
               {session?.user?.name || session?.user?.email}
             </span>
             <form
@@ -32,7 +32,7 @@ export default async function AppLayout({
                 await signOut({ redirectTo: "/login" });
               }}
             >
-              <Button variant="ghost" size="sm" type="submit">
+              <Button variant="ghost" size="sm" type="submit" className="text-muted-foreground hover:text-foreground">
                 Keluar
               </Button>
             </form>

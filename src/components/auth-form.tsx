@@ -36,9 +36,9 @@ export function AuthForm({ mode, action }: Props) {
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md shadow-xl shadow-primary/5">
       <CardHeader>
-        <CardTitle>{mode === "login" ? "Masuk" : "Daftar"}</CardTitle>
+        <CardTitle className="text-2xl tracking-tight">{mode === "login" ? "Masuk" : "Daftar"}</CardTitle>
         <CardDescription>
           {mode === "login"
             ? "Masuk untuk mengelola kendaraan Anda."
@@ -61,7 +61,7 @@ export function AuthForm({ mode, action }: Props) {
             <Label htmlFor="password">Password</Label>
             <Input id="password" name="password" type="password" placeholder="Minimal 6 karakter" required minLength={6} />
           </div>
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p className="text-sm text-destructive font-medium">{error}</p>}
         </CardContent>
         <CardFooter className="flex flex-col gap-3">
           <Button type="submit" className="w-full" disabled={loading}>
@@ -71,12 +71,12 @@ export function AuthForm({ mode, action }: Props) {
             {mode === "login" ? (
               <>
                 Belum punya akun?{" "}
-                <Link href="/register" className="underline">Daftar</Link>
+                <Link href="/register" className="underline font-medium hover:text-foreground transition-colors">Daftar</Link>
               </>
             ) : (
               <>
                 Sudah punya akun?{" "}
-                <Link href="/login" className="underline">Masuk</Link>
+                <Link href="/login" className="underline font-medium hover:text-foreground transition-colors">Masuk</Link>
               </>
             )}
           </p>

@@ -17,9 +17,11 @@ export default function AppError({
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-20 text-center">
-      <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-destructive" />
-      <h2 className="text-lg font-semibold mb-2">Terjadi Kesalahan</h2>
-      <p className="text-sm text-muted-foreground mb-6">
+      <div className="size-20 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto mb-6">
+        <AlertTriangle className="size-10 text-destructive" />
+      </div>
+      <h2 className="text-lg font-bold tracking-tight mb-2">Terjadi Kesalahan</h2>
+      <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
         {error.message || "Gagal memuat halaman. Silakan coba lagi."}
       </p>
       <Button onClick={reset} variant="default">

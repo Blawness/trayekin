@@ -34,8 +34,8 @@ export function VehicleForm({
   }
 
   return (
-    <form action={handleSubmit} className="space-y-6">
-      <Card>
+    <form action={handleSubmit} className="space-y-5">
+      <Card size="sm">
         <CardHeader>
           <CardTitle>Data Kendaraan</CardTitle>
         </CardHeader>
@@ -51,33 +51,33 @@ export function VehicleForm({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card size="sm">
         <CardHeader>
           <CardTitle>KIR Terakhir</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           <Label htmlFor="kir_start_date">Tanggal Mulai Berlaku KIR</Label>
           <Input id="kir_start_date" name="kir_start_date" type="date" />
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-muted-foreground">
             Tanggal kadaluarsa dihitung otomatis +6 bulan.
           </p>
         </CardContent>
       </Card>
 
-      <Card>
+      <Card size="sm">
         <CardHeader>
           <CardTitle>Servis Terakhir</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           <Label htmlFor="service_date">Tanggal Servis Terakhir</Label>
           <Input id="service_date" name="service_date" type="date" />
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-muted-foreground">
             Servis berikutnya dihitung otomatis +3 bulan.
           </p>
         </CardContent>
       </Card>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-destructive font-medium">{error}</p>}
 
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? "Menyimpan..." : "Simpan Kendaraan"}
