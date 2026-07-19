@@ -204,7 +204,7 @@ import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-sans",
+  variable: "--font-jakarta",
   display: "swap",
 });
 
@@ -240,10 +240,12 @@ Skrip tema ditulis inline di `<head>` supaya berjalan sebelum browser menggambar
 Buka `src/app/globals.css`, cari blok `@theme inline {` (sekitar baris 3). Tambahkan baris ini tepat setelah baris pembuka blok tersebut:
 
 ```css
-  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
 ```
 
 Tanpa baris ini, class `font-sans` tidak tahu variabel yang dibuat `next/font`, dan fontnya tidak akan terpakai meskipun sudah ke-load.
+
+Perhatikan kedua nama variabel harus berbeda: `next/font` membuat `--font-jakarta`, lalu token Tailwind `--font-sans` menunjuk ke sana. Menamai keduanya `--font-sans` menghasilkan `--font-sans: var(--font-sans)` — referensi melingkar yang membuat properti tersebut invalid, sehingga font gagal terpakai tanpa pesan error apa pun.
 
 - [ ] **Step 3: Verifikasi build dan lint**
 
