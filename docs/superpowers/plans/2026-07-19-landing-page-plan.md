@@ -1044,6 +1044,18 @@ export const metadata: Metadata = {
 
 Metadata ini menimpa metadata root layout khusus untuk route `/`.
 
+**`metadataBase` TIDAK boleh ditaruh di sini — harus di `src/app/layout.tsx`.** Tanpa `metadataBase`, URL `og:image` di produksi menunjuk `http://localhost:3000` dan preview gagal muncul saat link dibagikan di WhatsApp — persis jalur distribusi produk ini. Menaruhnya di `page.tsx` tidak berpengaruh: `opengraph-image.tsx` yang ditemukan otomatis oleh Next hanya mewarisi `metadataBase` dari layout leluhur, bukan dari `metadata` milik `page.tsx` di sebelahnya. Ini sudah diuji: warning tetap muncul sampai deklarasinya dipindah ke root layout.
+
+Di `src/app/layout.tsx`, tambahkan di atas `export const metadata`:
+
+```ts
+const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : "http://localhost:3000";
+```
+
+lalu `metadataBase: new URL(siteUrl),` sebagai properti pertama di dalam objek `metadata`. Nilainya diturunkan dari environment Vercel supaya ikut berubah sendiri kalau nanti dipasang domain kustom, dan jatuh ke localhost saat pengembangan lokal tanpa perlu konfigurasi apa pun.
+
 - [ ] **Step 2: Buat OG image**
 
 Buat `src/app/(marketing)/opengraph-image.tsx`:
@@ -1145,6 +1157,7 @@ Setelah ketujuh task selesai, jalankan seluruh pemeriksaan ini sekaligus:
 - [ ] Di viewport 360px, halaman tidak bisa di-scroll ke samping.
 - [ ] Dark mode tidak berkedip putih saat hard-reload.
 - [ ] Kedua tombol WhatsApp membuka `wa.me` dengan pesan awal terisi.
+- [ ] `pnpm build` tidak memunculkan peringatan `metadataBase`. Kalau muncul, preview OG di produksi akan menunjuk localhost dan gagal dimuat saat link dibagikan.
 
 ## Sebelum deploy production
 
