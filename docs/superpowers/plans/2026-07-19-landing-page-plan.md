@@ -839,7 +839,7 @@ import { Check } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const TERMASUK = [
-  "Semua kendaraan, tanpa batas jumlah",
+  "Semua kendaraan Anda",
   "Pengingat KIR, STNK, dan servis",
   "Buku kas harian dan laporan untung-rugi",
 ];
