@@ -19,7 +19,11 @@
 - **Jangan panggil `auth()` di mana pun dalam `(marketing)/`.** Itu membuat halaman dinamis. Tombol "Masuk" selalu mengarah ke `/login`; `src/proxy.ts` yang menangani user ber-sesi.
 - **Jangan menjanjikan fitur yang belum ada.** Dilarang menyebut multi-tenant, dashboard koperasi, atau billing otomatis di copy.
 - **Jangan tampilkan angka harga.** Hanya "Gratis selama masa beta".
-- **Palet dan radius pakai token yang sudah ada.** `bg-primary`, `text-muted-foreground`, `rounded-lg`, dst. Jangan hardcode warna hex atau oklch.
+- **Palet dan radius permukaan UI pakai token yang sudah ada.** `bg-primary`, `text-muted-foreground`, `rounded-lg`, dst. Jangan hardcode warna hex atau oklch.
+
+  Pengecualian: ilustrasi benda fisik — saat ini hanya frame HP di `phone-mockup.tsx` — boleh memakai radius mentah (`rounded-[2rem]`). Lengkung casing HP adalah properti benda yang digambar, bukan permukaan UI, dan skala `--radius-*` (mentok di 1.625rem) memang bukan peruntukannya. Pengecualian ini tidak berlaku untuk kartu, tombol, atau input di dalam mockup.
+
+- **Warna status harus cocok dengan `src/lib/utils/status.ts`.** Aplikasi memakai kosakata tiga status — aman, mendekati, terlambat — dengan keluarga warna green/yellow/red. Mockup landing page harus memakai keluarga yang sama supaya benar-benar mencerminkan tampilan produk. Jangan memakai emerald atau amber.
 - **Jangan sentuh** `docs/superpowers/CLAUDE-CODE-HANDOFF.md`, `trayekin-saas-strategy.md`, `trayekin-financial-model.xlsx` — file untracked yang sengaja tidak di-commit ke repo publik.
 - **Jangan migrasi NextAuth v5 ke library lain.** Jangan refactor yang tidak diminta.
 - **`Button` di repo ini TIDAK punya prop `asChild`.** Itu pola Radix; repo ini memakai `@base-ui/react`. Untuk merender tombol sebagai link, pakai prop `render` plus `nativeButton={false}`:
@@ -491,10 +495,14 @@ const UNIT_CONTOH = [
   { plat: "B 9012 DEF", info: "Semua dokumen aman", status: "aman" as const },
 ];
 
+// Keluarga warna mengikuti getStatusColor() di src/lib/utils/status.ts supaya
+// mockup benar-benar menyerupai tampilan aplikasi. Varian dark ditambahkan di
+// sini karena landing page mendukung dua tema, sedangkan badge di dalam
+// aplikasi belum.
 const GAYA_STATUS = {
-  aman: { kelas: "text-emerald-600 dark:text-emerald-400", Ikon: CheckCircle2 },
-  mendekati: { kelas: "text-amber-600 dark:text-amber-400", Ikon: Clock },
-  terlambat: { kelas: "text-destructive", Ikon: AlertTriangle },
+  aman: { kelas: "text-green-700 dark:text-green-400", Ikon: CheckCircle2 },
+  mendekati: { kelas: "text-yellow-700 dark:text-yellow-400", Ikon: Clock },
+  terlambat: { kelas: "text-red-700 dark:text-red-400", Ikon: AlertTriangle },
 };
 
 export function PhoneMockup() {
