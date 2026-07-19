@@ -84,6 +84,14 @@ export async function getPartReplacements(vehicleId: string) {
   const session = await auth();
   if (!session?.user) return [];
 
+  const [vehicle] = await db
+    .select({ userId: vehicles.userId })
+    .from(vehicles)
+    .where(eq(vehicles.id, vehicleId))
+    .limit(1);
+
+  if (!vehicle || vehicle.userId !== session.user.id) return [];
+
   try {
     return db
       .select()

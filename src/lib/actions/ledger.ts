@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { dailyLedger, appSettings, vehicles } from "@/lib/db/schema";
+import { dailyLedger, appSettings, vehicles, drivers } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { eq, desc, sql, and, gte } from "drizzle-orm";
 
@@ -101,6 +101,14 @@ export async function getLedgerEntries(vehicleId: string) {
   const session = await auth();
   if (!session?.user) return [];
 
+  const [vehicle] = await db
+    .select({ userId: vehicles.userId })
+    .from(vehicles)
+    .where(eq(vehicles.id, vehicleId))
+    .limit(1);
+
+  if (!vehicle || vehicle.userId !== session.user.id) return [];
+
   try {
     return db
       .select()
@@ -118,6 +126,14 @@ export async function getLedgerEntriesByDriver(driverId: string) {
   const session = await auth();
   if (!session?.user) return [];
 
+  const [driver] = await db
+    .select({ userId: drivers.userId })
+    .from(drivers)
+    .where(eq(drivers.id, driverId))
+    .limit(1);
+
+  if (!driver || driver.userId !== session.user.id) return [];
+
   try {
     return db
       .select()
@@ -134,6 +150,14 @@ export async function getLedgerEntriesByDriver(driverId: string) {
 export async function getLedgerSummary(vehicleId: string, since: Date) {
   const session = await auth();
   if (!session?.user) return null;
+
+  const [vehicle] = await db
+    .select({ userId: vehicles.userId })
+    .from(vehicles)
+    .where(eq(vehicles.id, vehicleId))
+    .limit(1);
+
+  if (!vehicle || vehicle.userId !== session.user.id) return null;
 
   try {
     const [result] = await db
@@ -160,6 +184,14 @@ export async function getLedgerSummary(vehicleId: string, since: Date) {
 export async function getDriverLedgerSummary(driverId: string, since: Date) {
   const session = await auth();
   if (!session?.user) return null;
+
+  const [driver] = await db
+    .select({ userId: drivers.userId })
+    .from(drivers)
+    .where(eq(drivers.id, driverId))
+    .limit(1);
+
+  if (!driver || driver.userId !== session.user.id) return null;
 
   try {
     const [result] = await db
