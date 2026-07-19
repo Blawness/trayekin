@@ -5,7 +5,7 @@ const LANGKAH = [
   },
   {
     judul: "Masukkan data angkot",
-    isi: "Isi plat nomor dan tanggal KIR serta STNK terakhir. Cukup sekali di awal.",
+    isi: "Isi plat nomor dan tanggal KIR terakhir. Cukup sekali di awal.",
   },
   {
     judul: "Catat harian, sisanya otomatis",
@@ -24,7 +24,10 @@ export function CaraKerja() {
         <ol className="mt-8 grid gap-6 sm:grid-cols-3">
           {LANGKAH.map(({ judul, isi }, i) => (
             <li key={judul} className="space-y-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary font-bold text-primary-foreground">
+              <span
+                aria-hidden="true"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-primary font-bold text-primary-foreground"
+              >
                 {i + 1}
               </span>
               <h3 className="font-semibold">{judul}</h3>
