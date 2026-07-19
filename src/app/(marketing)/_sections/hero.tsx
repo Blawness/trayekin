@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { whatsappUrl } from "@/lib/whatsapp";
+import { PhoneMockup } from "./phone-mockup";
 
 export function Hero() {
   return (
@@ -45,7 +46,7 @@ export function Hero() {
         </div>
 
         <div className="flex justify-center lg:justify-end">
-          {/* Mockup HP ditambahkan di Task 4 */}
+          <PhoneMockup />
         </div>
       </div>
     </section>
