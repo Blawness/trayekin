@@ -75,7 +75,7 @@ export async function markAsRead(notificationIds: string[]) {
       .set({ isRead: new Date() })
       .where(inArray(notifications.id, notificationIds));
 
-    revalidatePath("/", "layout");
+    revalidatePath("/dashboard", "layout");
   } catch (error) {
     console.error("markAsRead:", error);
   }

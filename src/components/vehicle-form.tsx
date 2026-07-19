@@ -28,7 +28,7 @@ export function VehicleForm({
       toast(result.error, "error");
     } else {
       toast("Kendaraan berhasil disimpan.", "success");
-      router.push("/");
+      router.push("/dashboard");
       router.refresh();
     }
   }

@@ -30,7 +30,7 @@ export function AuthForm({ mode, action }: Props) {
       setLoading(false);
       toast(result.error, "error");
     } else {
-      router.push("/");
+      router.push("/dashboard");
       router.refresh();
     }
   }

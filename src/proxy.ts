@@ -1,16 +1,20 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
+const PUBLIC_ROUTES = ["/", "/login", "/register"];
+
 export default auth((req) => {
   const isAuth = !!req.auth;
-  const isAuthPage = req.nextUrl.pathname.startsWith("/login") || req.nextUrl.pathname.startsWith("/register");
+  const { pathname } = req.nextUrl;
+  const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/register");
+  const isPublicPage = PUBLIC_ROUTES.includes(pathname) || isAuthPage;
 
-  if (!isAuth && !isAuthPage) {
+  if (!isAuth && !isPublicPage) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
   if (isAuth && isAuthPage) {
-    return NextResponse.redirect(new URL("/", req.url));
+    return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
   return NextResponse.next();

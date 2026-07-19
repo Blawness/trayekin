@@ -50,7 +50,7 @@ export async function createVehicle(formData: FormData) {
       });
     }
 
-    revalidatePath("/");
+    revalidatePath("/dashboard");
     revalidatePath("/vehicles");
     return { success: true, vehicleId: vehicle.id };
   } catch (error) {

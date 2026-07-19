@@ -17,7 +17,7 @@ export default async function AppLayout({
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex h-12 max-w-2xl items-center justify-between px-4">
-          <Link href="/" className="font-bold text-lg tracking-tight text-primary">
+          <Link href="/dashboard" className="font-bold text-lg tracking-tight text-primary">
             Trayekin
           </Link>
           <div className="flex items-center gap-0.5">
