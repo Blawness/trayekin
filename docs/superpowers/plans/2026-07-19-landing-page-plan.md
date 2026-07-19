@@ -1147,7 +1147,7 @@ Setelah ketujuh task selesai, jalankan seluruh pemeriksaan ini sekaligus:
 - [ ] `grep -rn '"use client"' "src/app/(marketing)/"` tidak menghasilkan apa-apa.
 - [ ] `grep -rn 'asChild' src/` tidak menghasilkan apa-apa. Prop itu tidak ada di `@base-ui/react` dan akan menghasilkan HTML rusak tanpa menggagalkan build.
 - [ ] Di DevTools, tombol "Tanya via WhatsApp" dan "Masuk" ter-render sebagai `<a>`, bukan `<button>` yang membungkus `<a>`.
-- [ ] `grep -rn 'href="/"\|push("/")\|redirect("/")\|revalidatePath("/")' src/` tidak menghasilkan apa-apa.
+- [ ] `grep -rn 'href="/"\|push("/")\|redirect("/")\|revalidatePath("/")' src/` hanya menghasilkan satu baris: wordmark "Trayekin" di `src/app/(marketing)/layout.tsx`, yang memang harus menunjuk ke beranda. Hasil lain berarti ada tautan yang terlewat.
 - [ ] `grep -rn ': *"/"' src/ public/` tidak menghasilkan apa-apa. Pola ini menangkap rujukan berbentuk properti objek yang dilewatkan pola di atas.
 - [ ] Di dalam aplikasi, tab "Dasbor" di bottom nav membuka `/dashboard` dan tersorot aktif saat berada di halaman itu.
 - [ ] Dalam keadaan logout, `/` menampilkan landing page tanpa redirect ke `/login`.
