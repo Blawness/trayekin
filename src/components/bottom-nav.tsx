@@ -6,7 +6,7 @@ import { House, Truck, Users, BarChart3, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "Dasbor", icon: House, exact: true },
+  { href: "/dashboard", label: "Dasbor", icon: House, exact: true },
   { href: "/vehicles", label: "Angkot", icon: Truck },
   { href: "/drivers", label: "Sopir", icon: Users },
   { href: "/reports", label: "Laporan", icon: BarChart3 },

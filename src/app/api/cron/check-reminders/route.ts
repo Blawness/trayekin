@@ -174,7 +174,7 @@ export async function GET(request: Request) {
             JSON.stringify({
               title: "Trayekin — Pengingat",
               body: "Ada KIR, servis, STNK, atau suku cadang yang perlu perhatian Anda.",
-              url: "/",
+              url: "/dashboard",
             })
           );
         } catch (err) {
