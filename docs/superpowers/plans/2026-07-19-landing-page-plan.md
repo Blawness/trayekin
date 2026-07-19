@@ -153,9 +153,12 @@ Perubahan kedua adalah perbaikan bug, bukan sekadar penyesuaian path. `revalidat
 
 ```bash
 grep -rn 'href="/"\|push("/")\|redirect("/")\|revalidatePath("/")' src/
+grep -rn ': *"/"' src/ public/
 ```
 
-Expected: tidak ada hasil sama sekali. Kalau ada, perbaiki jadi `/dashboard` sebelum lanjut.
+Expected: kedua perintah tidak menghasilkan apa-apa. Kalau ada, perbaiki jadi `/dashboard` sebelum lanjut.
+
+Perintah kedua wajib dan tidak boleh dilewati. Perintah pertama hanya cocok dengan sintaks atribut JSX (`href="/"`), sehingga melewatkan rujukan berbentuk properti objek — misalnya `href: "/"` di `src/components/bottom-nav.tsx` dan `url: "/"` di payload notifikasi push. Keduanya nyata terlewat saat plan ini pertama dijalankan.
 
 - [ ] **Step 7: Verifikasi build dan lint**
 
@@ -1120,6 +1123,8 @@ Setelah ketujuh task selesai, jalankan seluruh pemeriksaan ini sekaligus:
 - [ ] `grep -rn 'asChild' src/` tidak menghasilkan apa-apa. Prop itu tidak ada di `@base-ui/react` dan akan menghasilkan HTML rusak tanpa menggagalkan build.
 - [ ] Di DevTools, tombol "Tanya via WhatsApp" dan "Masuk" ter-render sebagai `<a>`, bukan `<button>` yang membungkus `<a>`.
 - [ ] `grep -rn 'href="/"\|push("/")\|redirect("/")\|revalidatePath("/")' src/` tidak menghasilkan apa-apa.
+- [ ] `grep -rn ': *"/"' src/ public/` tidak menghasilkan apa-apa. Pola ini menangkap rujukan berbentuk properti objek yang dilewatkan pola di atas.
+- [ ] Di dalam aplikasi, tab "Dasbor" di bottom nav membuka `/dashboard` dan tersorot aktif saat berada di halaman itu.
 - [ ] Dalam keadaan logout, `/` menampilkan landing page tanpa redirect ke `/login`.
 - [ ] Login lewat `/login` mendarat di `/dashboard`.
 - [ ] Dalam keadaan login, membuka `/` tetap menampilkan landing page.
