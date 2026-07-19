@@ -6,10 +6,14 @@ const UNIT_CONTOH = [
   { plat: "B 9012 DEF", info: "Semua dokumen aman", status: "aman" as const },
 ];
 
+// Keluarga warna mengikuti getStatusColor() di src/lib/utils/status.ts supaya
+// mockup benar-benar menyerupai tampilan aplikasi. Varian dark ditambahkan di
+// sini karena landing page mendukung dua tema, sedangkan badge di dalam
+// aplikasi belum.
 const GAYA_STATUS = {
-  aman: { kelas: "text-emerald-600 dark:text-emerald-400", Ikon: CheckCircle2 },
-  mendekati: { kelas: "text-amber-600 dark:text-amber-400", Ikon: Clock },
-  terlambat: { kelas: "text-destructive", Ikon: AlertTriangle },
+  aman: { kelas: "text-green-700 dark:text-green-400", Ikon: CheckCircle2 },
+  mendekati: { kelas: "text-yellow-700 dark:text-yellow-400", Ikon: Clock },
+  terlambat: { kelas: "text-red-700 dark:text-red-400", Ikon: AlertTriangle },
 };
 
 export function PhoneMockup() {
