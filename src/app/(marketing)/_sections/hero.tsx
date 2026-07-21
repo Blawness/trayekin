@@ -30,11 +30,23 @@ export function Hero() {
             </div>
 
             <h1
-              className="mkt-rise text-4xl font-extrabold leading-[1.05] tracking-tight text-balance sm:text-5xl lg:text-6xl"
+              className="mkt-rise text-4xl font-extrabold leading-[1.15] tracking-tight sm:text-5xl lg:text-6xl"
               style={{ ["--d" as string]: "0ms" } as React.CSSProperties}
             >
-              Kendalikan setiap angkot,{" "}
-              <span className="mkt-gradient-text">dari satu dashboard</span>.
+              Kendalikan setiap{" "}
+              <span className="relative inline-block pb-1">
+                <span className="inline-block bg-gradient-to-r from-[#3FA3FF] to-[#60A5FA] bg-clip-text text-transparent">
+                  angkot
+                </span>
+                {/* Glow underline */}
+                <span className="absolute bottom-0 left-0 right-0 h-[5px] rounded-full bg-gradient-to-r from-[#1B6FD8] to-[#3FA3FF] opacity-70 blur-[3px]" />
+                <span className="absolute bottom-0 left-0 right-0 h-[2.5px] rounded-full bg-gradient-to-r from-[#1B6FD8] to-[#3FA3FF]" />
+              </span>
+              ,{" "}
+              <span className="inline-block bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground bg-clip-text text-transparent">
+                dari satu dashboard
+              </span>
+              .
             </h1>
 
             <p

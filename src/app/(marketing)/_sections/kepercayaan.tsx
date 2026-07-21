@@ -18,14 +18,14 @@ const STATS = [
   {
     Ikon: Timer,
     nilai: 12,
-    suffix: " hr",
-    label: "Panggung pengingat sebelum jatuh tempo",
+    suffix: " hari",
+    label: "Peringatan dikirim sebelum jatuh tempo",
   },
   {
     Ikon: ShieldCheck,
     nilai: 0,
     suffix: "",
-    label: "Lupa jadwal servis sejak pakai pengingat",
+    label: "kali lupa jadwal servis sejak pakai pengingat",
   },
 ];
 
@@ -38,7 +38,7 @@ export function Kepercayaan() {
             Di lapangan
           </p>
           <p className="mt-3 text-2xl font-bold text-balance sm:text-3xl">
-            Sudah dipakai mengelola armada angkot JakLingko di Jakarta Timur.
+            Sudah dipakai mengelola armada angkot di Jakarta Timur.
           </p>
         </Reveal>
 

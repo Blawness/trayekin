@@ -17,7 +17,7 @@ const SOLUSI = [
   {
     Ikon: Wallet,
     judul: "Laporan untung-rugi",
-    isi: "Lihat untung bersih tiap unit per bulan, lengkap dengan biaya BBM dan servis. Tahun mana unit yang boncos, langsung kelihatan.",
+    isi: "Lihat untung bersih tiap unit per bulan, lengkap dengan biaya BBM dan servis. Tahu mana unit yang boncos, langsung kelihatan.",
     aksen: "from-[oklch(0.75_0.16_155)] to-[oklch(0.72_0.16_250)]",
   },
 ];
