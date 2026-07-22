@@ -1,9 +1,10 @@
 import { getProfitabilityReport } from "@/lib/actions/profitability";
+import { getBiggestCostDriver } from "@/lib/utils/profitability";
 import { getDriverSummaries } from "@/lib/actions/driverAssignments";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, TrendingDown } from "lucide-react";
 import Link from "next/link";
 
 type SortKey = "plate" | "revenue" | "totalCost" | "netProfit" | "marginPercent";
@@ -47,6 +48,11 @@ export default async function ReportsPage({
   const totalRevenue = sorted.reduce((s, r) => s + r.revenue, 0);
   const totalCost = sorted.reduce((s, r) => s + r.totalCost, 0);
   const fleetMargin = totalRevenue > 0 ? ((totalRevenue - totalCost) / totalRevenue) * 100 : 0;
+
+  const boncosRows = activeRows
+    .filter((r) => r.netProfit < 0)
+    .sort((a, b) => a.netProfit - b.netProfit)
+    .map((r) => ({ ...r, biggestCostDriver: getBiggestCostDriver(r) }));
 
   const periods = [
     { label: "30 Hari", value: "30" },
@@ -128,6 +134,41 @@ export default async function ReportsPage({
           </CardContent>
         </Card>
       </div>
+
+      {boncosRows.length > 0 && (
+        <Card size="sm" className="border-red-200 dark:border-red-900/50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <TrendingDown className="size-4 shrink-0 text-red-600 dark:text-red-400" />
+              <h2 className="text-sm font-bold text-red-700 dark:text-red-300">
+                {boncosRows.length} kendaraan boncos periode ini
+              </h2>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              {boncosRows.map((r) => (
+                <div
+                  key={r.vehicleId}
+                  className="flex items-center justify-between gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm dark:bg-red-950/40"
+                >
+                  <div className="min-w-0">
+                    <Link href={`/vehicles/${r.vehicleId}`} className="font-semibold text-primary hover:underline">
+                      {r.plate}
+                    </Link>
+                    {r.biggestCostDriver && (
+                      <span className="text-xs text-muted-foreground ml-2">
+                        biaya terbesar: {r.biggestCostDriver.label} (Rp {r.biggestCostDriver.amount.toLocaleString("id-ID")})
+                      </span>
+                    )}
+                  </div>
+                  <span className="shrink-0 font-semibold tabular-nums text-red-600 dark:text-red-400">
+                    Rp {r.netProfit.toLocaleString("id-ID")}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card size="sm" className="overflow-hidden">
         <div className="overflow-x-auto">

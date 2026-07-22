@@ -7,16 +7,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getStatus, getStatusLabel, getStatusColor } from "@/lib/utils/status";
 import { cn } from "@/lib/utils";
-import { Plus, Truck, RefreshCw, AlertTriangle } from "lucide-react";
+import { Plus, Truck, RefreshCw, AlertTriangle, TrendingDown } from "lucide-react";
 import type { getVehicles } from "@/lib/actions/vehicles";
+import type { BoncosRow } from "@/lib/utils/profitability";
 
 type Vehicle = Awaited<ReturnType<typeof getVehicles>>[number];
 
 export function DashboardContent({
   vehicles,
+  boncos,
   showCronWarning,
 }: {
   vehicles: Vehicle[];
+  boncos: BoncosRow[];
   showCronWarning: boolean;
 }) {
   const router = useRouter();
@@ -50,6 +53,45 @@ export function DashboardContent({
           </span>
         </div>
       )}
+
+      {boncos.length > 0 && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 dark:border-red-900/50 dark:bg-red-950/40">
+          <div className="flex items-center gap-2 mb-2.5">
+            <TrendingDown className="size-4 shrink-0 text-red-600 dark:text-red-400" />
+            <span className="text-sm font-semibold text-red-800 dark:text-red-300">
+              {boncos.length} kendaraan boncos (30 hari terakhir)
+            </span>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {boncos.slice(0, 3).map((b) => (
+              <Link
+                key={b.vehicleId}
+                href={`/vehicles/${b.vehicleId}`}
+                className="flex items-center justify-between gap-2 rounded-lg bg-card/60 px-3 py-2 text-sm hover:bg-card transition-colors"
+              >
+                <div className="min-w-0">
+                  <span className="font-semibold">{b.plate}</span>
+                  {b.biggestCostDriver && (
+                    <span className="text-xs text-muted-foreground ml-2">
+                      biaya terbesar: {b.biggestCostDriver.label}
+                    </span>
+                  )}
+                </div>
+                <span className="shrink-0 font-semibold tabular-nums text-red-600 dark:text-red-400">
+                  Rp {b.netProfit.toLocaleString("id-ID")}
+                </span>
+              </Link>
+            ))}
+          </div>
+          <Link
+            href="/reports"
+            className="mt-2.5 inline-block text-xs font-medium text-red-700 hover:underline dark:text-red-400"
+          >
+            Lihat laporan lengkap →
+          </Link>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Card size="sm" className="relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500" />

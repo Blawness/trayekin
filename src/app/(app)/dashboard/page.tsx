@@ -1,4 +1,5 @@
 import { getVehicles } from "@/lib/actions/vehicles";
+import { getBoncosVehicles } from "@/lib/actions/profitability";
 import { DashboardContent } from "@/components/dashboard-content";
 import { db } from "@/lib/db";
 import { cronLogs } from "@/lib/db/schema";
@@ -6,6 +7,13 @@ import { desc } from "drizzle-orm";
 
 export default async function DashboardPage() {
   const vehicles = await getVehicles();
+
+  const now = new Date();
+  const start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const boncos = await getBoncosVehicles(
+    start.toISOString().split("T")[0],
+    now.toISOString().split("T")[0]
+  );
 
   const [latestLog] = await db
     .select()
@@ -24,6 +32,6 @@ export default async function DashboardPage() {
   }
 
   return (
-    <DashboardContent vehicles={vehicles} showCronWarning={showCronWarning} />
+    <DashboardContent vehicles={vehicles} boncos={boncos} showCronWarning={showCronWarning} />
   );
 }

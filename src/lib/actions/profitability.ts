@@ -12,6 +12,7 @@ import {
 } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { eq, inArray, and, gte, lte } from "drizzle-orm";
+import { getBiggestCostDriver, type BoncosRow } from "@/lib/utils/profitability";
 
 export type ProfitabilityRow = {
   vehicleId: string;
@@ -164,4 +165,18 @@ export async function getProfitabilityReport(
     console.error("getProfitabilityReport:", error);
     return [];
   }
+}
+
+export async function getBoncosVehicles(
+  periodStart: string,
+  periodEnd: string
+): Promise<BoncosRow[]> {
+  const rows = await getProfitabilityReport(periodStart, periodEnd);
+  return rows
+    .filter(
+      (r) =>
+        (r.totalKm > 0 || r.revenue > 0 || r.totalCost > 0) && r.netProfit < 0
+    )
+    .sort((a, b) => a.netProfit - b.netProfit)
+    .map((r) => ({ ...r, biggestCostDriver: getBiggestCostDriver(r) }));
 }
